@@ -4,7 +4,6 @@ name = "worker"
 queue_size = 8192
 batch_size = 5
 ethereum_batch_size = 3
-threads = 1
 
 [ethereum]
 url = "http://localhost:8545"

@@ -19,20 +19,6 @@ pub fn log() {
     debug!(LOG_LEVEL = level);
 }
 
-pub fn runtime(threads: usize) -> Runtime {
-    debug!("creating tokio runtime with {} worker threads", threads);
-
-    let runtime = Builder::new_multi_thread().worker_threads(threads).enable_all().build();
-
-    match runtime {
-        Ok(runtime) => runtime,
-        Err(err) => {
-            error!("failed to build runtime: {err}");
-            process::exit(1);
-        }
-    }
-}
-
 pub fn state() -> Arc<AppState> {
     let args = Args::parse();
     let config = AppConfig::load(args.config);

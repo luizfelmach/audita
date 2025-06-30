@@ -11,7 +11,6 @@ pub struct AppConfig {
     pub queue_size: usize,
     pub batch_size: usize,
     pub ethereum_batch_size: usize,
-    pub threads: usize,
     pub ethereum: EthereumConfig,
     pub elastic: ElasticConfig,
 }
