@@ -11,8 +11,6 @@ mod setup;
 mod state;
 mod task;
 
-use std::sync::Arc;
-
 #[tokio::main]
 async fn main() {
     setup::log();
@@ -20,9 +18,9 @@ async fn main() {
     let state = setup::state();
 
     tokio::select! {
-        () = task::processor(Arc::clone(&state)) =>{} ,
-        () = task::signer(Arc::clone(&state)) => {},
-        () = task::storage(Arc::clone(&state)) =>  {},
-        () = task::server(Arc::clone(&state)) => {},
+        () = task::processor(state.clone()) =>{} ,
+        () = task::signer(state.clone()) => {},
+        () = task::storage(state.clone()) =>  {},
+        () = task::server(state.clone()) => {},
     }
 }
