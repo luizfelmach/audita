@@ -8,11 +8,13 @@ use std::borrow::Cow;
 
 #[derive(RustEmbed)]
 #[folder = "./ui/dist"]
+
 struct Asset;
 
 pub async fn serve_ui(uri: Uri) -> Response {
     let path = uri.path();
     let path = if path == "/" || path.is_empty() { "index.html" } else { &path[1..] };
+
     match Asset::get(path) {
         Some(content) => {
             let body = match content.data {
