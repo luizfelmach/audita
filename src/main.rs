@@ -1,15 +1,14 @@
-mod batch;
+mod application;
 mod channel;
-mod client;
 mod config;
-mod entity;
+mod domain;
 mod error;
 mod handlers;
+mod infrastructure;
 mod prometheus;
 mod routes;
 mod setup;
 mod state;
-mod storage;
 mod task;
 
 use state::AppState;
@@ -31,9 +30,9 @@ async fn app(state: Arc<AppState>) {
     debug!("starting tasks: worker, ethereum, elastic, and server");
 
     tokio::select! {
-        () = task::worker(Arc::clone(&state)) => warn!("worker task exited unexpectedly"),
-        () = task::ethereum(Arc::clone(&state)) => warn!("ethereum task exited unexpectedly"),
-        () = task::storage(Arc::clone(&state)) => warn!("elastic task exited unexpectedly"),
+        () = task::processor(Arc::clone(&state)) => warn!("processor task exited unexpectedly"),
+        () = task::signer(Arc::clone(&state)) => warn!("signer task exited unexpectedly"),
+        () = task::storage(Arc::clone(&state)) => warn!("storage task exited unexpectedly"),
         () = task::server(Arc::clone(&state)) => warn!("server task exited unexpectedly"),
     }
 

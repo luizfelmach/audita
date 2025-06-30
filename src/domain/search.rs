@@ -29,7 +29,7 @@ pub struct Condition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct QueryExpr {
+pub struct Query {
     pub and: Option<Vec<Condition>>,
     pub or: Option<Vec<Condition>>,
     pub not: Option<Vec<Condition>>,

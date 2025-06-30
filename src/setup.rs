@@ -1,7 +1,4 @@
-use crate::{
-    channel, client::ethereum::EthereumClient, config::AppConfig, prometheus::Prometheus, state::AppState,
-    storage::elasticsearch::ElasticsearchAdapter,
-};
+use crate::{application::Services, channel, config::AppConfig, prometheus::Prometheus, state::AppState};
 use clap::Parser;
 use std::{env, process, sync::Arc};
 use tokio::runtime::{Builder, Runtime};
@@ -46,21 +43,8 @@ pub fn state() -> Arc<AppState> {
 
     let (tx, rx) = channel::new(config.queue_size);
 
-    let storage = ElasticsearchAdapter::new(config.elastic.url.clone(), config.elastic.username.clone(), config.elastic.password.clone());
-
-    let Ok(storage) = storage else {
-        error!("error creating elastic client: {:?}", storage);
-        process::exit(1);
-    };
-
-    let ethereum = EthereumClient::new(config.ethereum.url.clone(), config.ethereum.contract.clone(), config.ethereum.private_key.clone());
-
-    let Ok(ethereum) = ethereum else {
-        error!("error creating ethereum client: {:?}", ethereum);
-        process::exit(1);
-    };
-
+    let services = Services::new();
     let prometheus = Prometheus::new();
 
-    return Arc::new(AppState { config, tx, rx, storage, ethereum, prometheus });
+    return Arc::new(AppState { config, tx, rx, services, prometheus });
 }

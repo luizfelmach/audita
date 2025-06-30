@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    batch::Batch,
-    entity::Storable,
+    domain::{Document, DocumentStorable, Query},
     error::{AppError, Result},
     state::AppState,
-    storage::{search::QueryExpr, Storage},
 };
 use anyhow::Context;
 use axum::{
@@ -31,15 +29,18 @@ pub async fn handle_get_hash_storage(
         return Ok(Json(cached));
     }
 
-    let results = state.storage.retrieve(batch_id.as_str()).await.context("An error occurrued when retrieving data from storage")?;
-
+    let results =
+        state.services.document.get_documents_by_id(batch_id.clone()).context("An error occurrued when retrieving data from storage")?;
     if results.is_empty() {
         return Err(AppError::NotFound("No records found for the given batch_id".into()));
     }
 
-    let mut batch = Batch::new();
-    results.iter().try_for_each(|item| batch.add(&item.doc)).context("Error while computing the batch hash from the document contents")?;
-    let response = GetHashStorageResponse { id: batch_id.clone(), count: batch.count, hash: batch.hash.to_hex() };
+    let docs = results.iter().map(|item| item.doc.clone()).collect::<Vec<Document>>();
+
+    let digest =
+        state.services.document_hasher.hash_documents(&docs).context("Error while computing the batch hash from the document contents")?;
+
+    let response = GetHashStorageResponse { id: batch_id.clone(), count: docs.len(), hash: digest.to_hex() };
     cache.insert(batch_id, response.clone()).await;
 
     Ok(Json(response))
@@ -47,15 +48,15 @@ pub async fn handle_get_hash_storage(
 
 #[derive(Deserialize)]
 pub struct SearchDocsRequest {
-    query: QueryExpr,
+    query: Query,
 }
 
 #[derive(Serialize)]
 pub struct SearchDocsResponse {
-    docs: Vec<Storable>,
+    docs: Vec<DocumentStorable>,
 }
 
 pub async fn handle_search_docs(State(state): State<AppState>, Json(payload): Json<SearchDocsRequest>) -> Result<Json<SearchDocsResponse>> {
-    let docs = state.storage.search(payload.query).await.context("An error ocurrued when processing query")?;
+    let docs = state.services.document.search_documents(payload.query).context("An error ocurrued when processing query")?;
     Ok(Json(SearchDocsResponse { docs }))
 }

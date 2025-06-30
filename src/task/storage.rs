@@ -1,31 +1,15 @@
-use crate::{state::AppState, storage::Storage};
+use crate::state::AppState;
 use std::sync::Arc;
-use tracing::{debug, error, info, trace};
 
 pub async fn storage(state: Arc<AppState>) {
-    let config = state.config.clone();
-    let rx = state.rx.clone();
-    let elastic = config.elastic;
-    let client = state.storage.clone();
-
+    let rx = state.rx.storage.clone();
     let mut buffer = Vec::new();
 
-    info!("storage worker started with disable: {}", elastic.disable);
+    while let Some(doc) = rx.lock().await.recv().await {
+        buffer.push(doc);
 
-    while let Some(msg) = rx.storage.lock().await.recv().await {
-        state.prometheus.elastic_queue.dec();
-        trace!("received message for elastic");
-        if elastic.disable {
-            debug!("elastic disabled, skipping message");
-            continue;
-        }
-
-        buffer.push(msg.clone());
-
-        if buffer.len() >= 10_000 {
-            if let Err(err) = client.store(&buffer).await {
-                error!(?err, "error storing documents");
-            }
+        if buffer.len() >= 2 {
+            let _ = state.services.document.store_documents(&buffer).unwrap();
             buffer.clear();
         }
     }
