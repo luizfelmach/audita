@@ -11,5 +11,5 @@ pub struct Fingerprint {
 pub trait FingerprintRepository {
     fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest>;
     fn confirm_transaction(&self, tx: Digest) -> Result<Digest>;
-    fn find_by_id(&self, id: String) -> Result<Fingerprint>;
+    fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>>;
 }

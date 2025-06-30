@@ -19,7 +19,7 @@ impl<R: FingerprintRepository> FingerprintService<R> {
         self.repository.confirm_transaction(tx)
     }
 
-    pub fn find(&self, id: String) -> Result<Fingerprint> {
+    pub fn find(&self, id: String) -> Result<Option<Fingerprint>> {
         self.repository.find_by_id(id)
     }
 }

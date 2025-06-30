@@ -8,7 +8,7 @@ pub async fn storage(state: Arc<AppState>) {
     while let Some(doc) = rx.lock().await.recv().await {
         buffer.push(doc);
 
-        if buffer.len() >= 2 {
+        if buffer.len() >= 1 {
             let _ = state.services.document.store_documents(&buffer).unwrap();
             buffer.clear();
         }

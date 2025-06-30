@@ -12,14 +12,16 @@ post {
 
 body:json {
   {
-    "and": [
-      {
-        "field": "teste",
-        "op": {
-          "type": "NeqString",
-          "value": "string"
+    "query": {
+      "and": [
+        {
+          "field": "teste",
+          "op": {
+            "type": "NeqString",
+            "value": "string"
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 }

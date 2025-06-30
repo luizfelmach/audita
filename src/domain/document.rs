@@ -19,6 +19,5 @@ pub trait DocumentRepository {
 }
 
 pub trait DocumentHasher {
-    fn digest(&self, item: &Document) -> Result<Digest>;
     fn digest_batch(&self, items: &Vec<Document>) -> Result<Digest>;
 }

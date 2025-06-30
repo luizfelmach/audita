@@ -18,7 +18,6 @@ pub type CacheHashStorageResponse = Arc<Cache<String, GetHashStorageResponse>>;
 #[derive(Serialize, Clone)]
 pub struct GetHashStorageResponse {
     id: String,
-    count: usize,
     hash: String,
 }
 
@@ -40,7 +39,7 @@ pub async fn handle_get_hash_storage(
     let digest =
         state.services.document_hasher.hash_documents(&docs).context("Error while computing the batch hash from the document contents")?;
 
-    let response = GetHashStorageResponse { id: batch_id.clone(), count: docs.len(), hash: digest.to_hex() };
+    let response = GetHashStorageResponse { id: batch_id.clone(), hash: digest.to_hex() };
     cache.insert(batch_id, response.clone()).await;
 
     Ok(Json(response))

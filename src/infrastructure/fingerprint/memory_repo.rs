@@ -26,8 +26,8 @@ impl FingerprintRepository for MemoryFingerprintRepository {
         Ok(tx)
     }
 
-    fn find_by_id(&self, id: String) -> Result<Fingerprint> {
+    fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>> {
         let storage = self.store.read().unwrap();
-        storage.get(&id).cloned().ok_or_else(|| anyhow!("Fingerprint not found: {}", id))
+        Ok(storage.get(&id).cloned())
     }
 }
