@@ -1,8 +1,9 @@
 use crate::{
     application::Services,
-    channel::{RxChannel, TxChannel},
+    channel::{self, RxChannel, TxChannel},
     config::AppConfig,
 };
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -10,4 +11,14 @@ pub struct AppState {
     pub tx: TxChannel,
     pub rx: RxChannel,
     pub services: Services,
+}
+
+impl AppState {
+    pub fn new() -> Arc<Self> {
+        let config = AppConfig::new().expect("Failed to load config");
+        let services = Services::new();
+        let (tx, rx) = channel::new(config.queue_capacity);
+
+        Arc::new(AppState { config, tx, rx, services })
+    }
 }
