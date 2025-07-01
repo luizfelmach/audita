@@ -28,8 +28,13 @@ pub async fn handle_get_hash_storage(
         return Ok(Json(cached));
     }
 
-    let results =
-        state.services.document.get_documents_by_id(batch_id.clone()).context("An error occurrued when retrieving data from storage")?;
+    let results = state
+        .services
+        .document
+        .get_documents_by_id(batch_id.clone())
+        .await
+        .context("An error occurrued when retrieving data from storage")?;
+
     if results.is_empty() {
         return Err(AppError::NotFound("No records found for the given batch_id".into()));
     }
@@ -56,6 +61,6 @@ pub struct SearchDocsResponse {
 }
 
 pub async fn handle_search_docs(State(state): State<AppState>, Json(payload): Json<SearchDocsRequest>) -> Result<Json<SearchDocsResponse>> {
-    let docs = state.services.document.search_documents(payload.query).context("An error ocurrued when processing query")?;
+    let docs = state.services.document.search_documents(payload.query).await.context("An error ocurrued when processing query")?;
     Ok(Json(SearchDocsResponse { docs }))
 }

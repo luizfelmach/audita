@@ -15,7 +15,7 @@ impl MemoryDocumentRepository {
 }
 
 impl DocumentRepository for MemoryDocumentRepository {
-    fn store(&self, items: &Vec<DocumentStorable>) -> Result<()> {
+    async fn store(&self, items: &Vec<DocumentStorable>) -> Result<()> {
         let mut storage = self.store.write().unwrap();
         for item in items {
             storage.entry(item.id.clone()).or_default().push(item.clone());
@@ -23,12 +23,12 @@ impl DocumentRepository for MemoryDocumentRepository {
         Ok(())
     }
 
-    fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>> {
+    async fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>> {
         let storage = self.store.read().unwrap();
         Ok(storage.get(&id).cloned().unwrap_or_default())
     }
 
-    fn search(&self, _query: Query) -> Result<Vec<DocumentStorable>> {
+    async fn search(&self, _query: Query) -> Result<Vec<DocumentStorable>> {
         let storage = self.store.read().unwrap();
         Ok(storage.values().flat_map(|docs| docs.clone()).collect())
     }

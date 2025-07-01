@@ -13,9 +13,9 @@ pub struct DocumentStorable {
 }
 
 pub trait DocumentRepository {
-    fn store(&self, items: &Vec<DocumentStorable>) -> Result<()>;
-    fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>>;
-    fn search(&self, query: Query) -> Result<Vec<DocumentStorable>>;
+    async fn store(&self, items: &Vec<DocumentStorable>) -> Result<()>;
+    async fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>>;
+    async fn search(&self, query: Query) -> Result<Vec<DocumentStorable>>;
 }
 
 pub trait DocumentHasher {
