@@ -1,9 +1,9 @@
 host = "0.0.0.0"
-port = 8080
 name = "worker"
-queue_size = 8192
-batch_size = 5
-ethereum_batch_size = 3
+port = 8080
+queue_capacity = 8192
+batch_threshold = 5
+chain_threshold = 5
 
 [ethereum]
 url = "http://localhost:8545"

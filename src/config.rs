@@ -1,16 +1,14 @@
+use anyhow::Result;
+use config::{Config, Environment, File};
 use serde::Deserialize;
-use std::error::Error;
-use std::fs::File;
-use std::io::Read;
-use toml;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
     pub host: String,
     pub port: u16,
-    pub queue_size: usize,
-    pub batch_size: usize,
-    pub ethereum_batch_size: usize,
+    pub queue_capacity: usize,
+    pub batch_threshold: usize,
+    pub chain_threshold: usize,
     pub ethereum: EthereumConfig,
     pub elastic: ElasticConfig,
 }
@@ -30,13 +28,15 @@ pub struct ElasticConfig {
     pub password: String,
     pub disable: bool,
 }
-impl AppConfig {
-    pub fn load(path: String) -> Result<Self, Box<dyn Error>> {
-        let mut file = File::open(&path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        let config = toml::from_str(&contents)?;
 
-        Ok(config)
+impl AppConfig {
+    pub fn new() -> Result<Self> {
+        let cfg = Config::builder()
+            .add_source(File::with_name("/etc/audita/config.toml").required(false))
+            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("config/dev.toml").required(false))
+            .add_source(Environment::with_prefix("AUDITA").separator("__"))
+            .build()?;
+        Ok(cfg.try_deserialize()?)
     }
 }

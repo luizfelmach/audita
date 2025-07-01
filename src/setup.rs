@@ -1,18 +1,11 @@
-use crate::{application::Services, channel, config::AppConfig, prometheus::Prometheus, state::AppState};
-use clap::Parser;
-use std::{env, process, sync::Arc};
-use tokio::runtime::{Builder, Runtime};
-use tracing::{debug, error};
+use std::{env, sync::Arc};
+use tracing::debug;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    #[arg(short, long)]
-    config: String,
-}
+use crate::{application::Services, channel, config::AppConfig, state::AppState};
 
-pub fn log() {
+pub fn logger() {
     let level = env::var("LOG_LEVEL").unwrap_or_else(|_| "info".to_string());
+
     env::set_var("RUST_LOG", format!("{},alloy=error,hyper=error,reqwest=error,axum=error", level));
     tracing_subscriber::fmt::init();
 
@@ -20,17 +13,9 @@ pub fn log() {
 }
 
 pub fn state() -> Arc<AppState> {
-    let args = Args::parse();
-    let config = AppConfig::load(args.config);
-    let Ok(config) = config else {
-        error!("error reading config file: {:?}", config);
-        process::exit(1);
-    };
-
-    let (tx, rx) = channel::new(config.queue_size);
-
+    let config = AppConfig::new().expect("Failed to load config");
     let services = Services::new();
-    let prometheus = Prometheus::new();
+    let (tx, rx) = channel::new(config.queue_capacity);
 
-    return Arc::new(AppState { config, tx, rx, services, prometheus });
+    Arc::new(AppState { config, tx, rx, services })
 }
