@@ -14,7 +14,7 @@ pub struct Services {
 
 impl Services {
     pub fn new() -> Self {
-        let doc_repo = ElasticsearchDocumentRepository::new();
+        let doc_repo = ElasticsearchDocumentRepository::new("http://localhost:9200".into(), "elastic".into(), "changeme".into()).unwrap();
         let fp_repo = AlloyEthereumFingerprintRepository::new(
             "http://localhost:8545/".into(),
             "0x42699A7612A82f1d9C36148af9C77354759b210b".into(),
