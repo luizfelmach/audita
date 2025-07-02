@@ -1,20 +1,20 @@
 use crate::{
     application::{DocumentHasherService, DocumentService, FingerprintService},
     infrastructure::{
-        document::MemoryDocumentRepository, fingerprint::AlloyEthereumFingerprintRepository, helper::Sha256DocumentHasherHelper,
+        document::ElasticsearchDocumentRepository, fingerprint::AlloyEthereumFingerprintRepository, helper::Sha256DocumentHasherHelper,
     },
 };
 
 #[derive(Clone)]
 pub struct Services {
-    pub document: DocumentService<MemoryDocumentRepository>,
+    pub document: DocumentService<ElasticsearchDocumentRepository>,
     pub fingerprint: FingerprintService<AlloyEthereumFingerprintRepository>,
     pub document_hasher: DocumentHasherService<Sha256DocumentHasherHelper>,
 }
 
 impl Services {
     pub fn new() -> Self {
-        let doc_repo = MemoryDocumentRepository::new();
+        let doc_repo = ElasticsearchDocumentRepository::new();
         let fp_repo = AlloyEthereumFingerprintRepository::new(
             "http://localhost:8545/".into(),
             "0x42699A7612A82f1d9C36148af9C77354759b210b".into(),
