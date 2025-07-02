@@ -9,7 +9,7 @@ pub struct Fingerprint {
 }
 
 pub trait FingerprintRepository {
-    fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest>;
-    fn confirm_transaction(&self, tx: Digest) -> Result<Digest>;
-    fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>>;
+    async fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest>;
+    async fn confirm_transaction(&self, tx: Digest) -> Result<Digest>;
+    async fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>>;
 }

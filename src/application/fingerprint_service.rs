@@ -11,15 +11,15 @@ impl<R: FingerprintRepository> FingerprintService<R> {
         Self { repository }
     }
 
-    pub fn submit(&self, fingerprint: Fingerprint) -> Result<Digest> {
-        self.repository.submit_fingerprint(fingerprint)
+    pub async fn submit(&self, fingerprint: Fingerprint) -> Result<Digest> {
+        self.repository.submit_fingerprint(fingerprint).await
     }
 
-    pub fn confirm(&self, tx: Digest) -> Result<Digest> {
-        self.repository.confirm_transaction(tx)
+    pub async fn confirm(&self, tx: Digest) -> Result<Digest> {
+        self.repository.confirm_transaction(tx).await
     }
 
-    pub fn find(&self, id: String) -> Result<Option<Fingerprint>> {
-        self.repository.find_by_id(id)
+    pub async fn find(&self, id: String) -> Result<Option<Fingerprint>> {
+        self.repository.find_by_id(id).await
     }
 }

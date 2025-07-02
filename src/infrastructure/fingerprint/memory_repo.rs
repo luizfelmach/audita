@@ -16,17 +16,17 @@ impl MemoryFingerprintRepository {
 }
 
 impl FingerprintRepository for MemoryFingerprintRepository {
-    fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest> {
+    async fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest> {
         let mut storage = self.store.write().unwrap();
         storage.insert(fp.id.clone(), fp.clone());
         Ok(fp.hash)
     }
 
-    fn confirm_transaction(&self, tx: Digest) -> Result<Digest> {
+    async fn confirm_transaction(&self, tx: Digest) -> Result<Digest> {
         Ok(tx)
     }
 
-    fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>> {
+    async fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>> {
         let storage = self.store.read().unwrap();
         Ok(storage.get(&id).cloned())
     }
