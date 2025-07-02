@@ -1,16 +1,17 @@
+use crate::domain::SignerRepository;
 use alloy::{
-    network::EthereumWallet,
+    network::{EthereumWallet, TransactionBuilder},
+    primitives::U256,
     providers::{DynProvider, Provider, ProviderBuilder},
+    rpc::types::TransactionRequest,
     signers::local::PrivateKeySigner,
     sol,
 };
 use anyhow::{bail, Result};
 use std::time::Duration;
 
-use crate::domain::{Fingerprint, FingerprintRepository};
-
-#[derive(Debug, Clone)]
-pub struct AlloyEthereumFingerprintRepository {
+#[derive(Clone)]
+pub struct EthereumSignerRepository {
     provider: DynProvider,
     signer: PrivateKeySigner,
     instance: Auditability::AuditabilityInstance<(), DynProvider>,
@@ -26,49 +27,22 @@ sol! {
     }
 }
 
-impl AlloyEthereumFingerprintRepository {
+impl EthereumSignerRepository {
     pub fn new(url: String, contract: String, pk: String) -> Result<Self> {
         let signer: PrivateKeySigner = pk.parse()?;
         let wallet = EthereumWallet::from(signer.clone());
-        let url_parsed = url.parse()?;
-        let provider = ProviderBuilder::new().wallet(wallet).on_http(url_parsed);
+        let url = url.parse()?;
+        let provider = ProviderBuilder::new().wallet(wallet).on_http(url);
         let provider = DynProvider::new(provider);
         let contract = contract.parse()?;
         let instance = Auditability::new(contract, provider.clone());
-
         Ok(Self { provider, signer, instance })
     }
 
-    pub async fn nonce(&self) -> Result<u64> {
+    async fn nonce(&self) -> Result<u64> {
         let address = self.signer.address();
         let nonce = self.provider.get_transaction_count(address).await?;
         Ok(nonce)
-    }
-}
-
-impl FingerprintRepository for AlloyEthereumFingerprintRepository {
-    async fn submit(&self, fingerprint: &Fingerprint) -> Result<[u8; 32]> {
-        let mut attempt = 0;
-        let nonce = self.nonce().await?;
-        let Fingerprint { id, hash } = fingerprint;
-
-        loop {
-            let result = {
-                let call = self.instance.store(id.clone(), hash.into()).nonce(nonce);
-                call.send().await
-            };
-
-            if let Ok(tx) = result {
-                return Ok(tx.tx_hash().0);
-            }
-
-            attempt += 1;
-            if attempt >= 3 {
-                bail!("failed to send tx");
-            }
-
-            tokio::time::sleep(Duration::from_millis(200)).await;
-        }
     }
 
     async fn confirm(&self, tx: &[u8; 32]) -> Result<[u8; 32]> {
@@ -78,15 +52,77 @@ impl FingerprintRepository for AlloyEthereumFingerprintRepository {
             match self.provider.get_transaction_receipt(tx.into()).await {
                 Ok(Some(receipt)) => return Ok(receipt.transaction_hash.0),
                 Ok(None) => continue,
-                Err(err) => bail!("failed to get transaction receipt: {err}"),
+                Err(err) => bail!("failed to get transaction receipt: {}", err),
             }
         }
     }
 
-    async fn find_by_id(&self, id: &String) -> Result<Option<Fingerprint>> {
+    async fn store(&self, id: &String, hash: &[u8; 32]) -> Result<([u8; 32], u64)> {
+        let nonce = self.nonce().await?;
+        let call = self.instance.store(id.clone(), hash.into()).nonce(nonce).send().await;
+        match call {
+            Ok(tx) => Ok((tx.tx_hash().0, nonce)),
+            Err(err) => bail!("failed to call contract function `store` with id `{}` and hash `{:?}`: {:?}", id, hash, err),
+        }
+    }
+
+    async fn remove(&self, nonce: u64) -> Result<()> {
+        let address = self.signer.address();
+        let tx = TransactionRequest::default()
+            .with_to(address)
+            .with_nonce(nonce)
+            .with_value(U256::ZERO)
+            .with_gas_limit(21_000)
+            .with_max_priority_fee_per_gas(1_000_000_000)
+            .with_max_fee_per_gas(20_000_000_000);
+        let _ = self.provider.send_transaction(tx).await?.get_receipt().await?;
+        Ok(())
+    }
+
+    async fn exists(&self, id: &String) -> Result<bool> {
+        match self.instance.exists(id.clone()).call().await {
+            Ok(exists) => Ok(exists._0),
+            Err(err) => bail!("failed to call contract function `exists` with id `{}`: {:?}", id, err),
+        }
+    }
+}
+
+impl Default for EthereumSignerRepository {
+    fn default() -> Self {
+        Self::new(
+            "http://localhost:8545".into(),
+            "0x42699A7612A82f1d9C36148af9C77354759b210b".into(),
+            "0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63".into(),
+        )
+        .unwrap()
+    }
+}
+
+impl SignerRepository for EthereumSignerRepository {
+    async fn publish(&self, batches: &Vec<crate::domain::Batch>) -> Result<()> {
+        let txs: Vec<_> = batches.iter().map(|batch| self.store(&batch.id, &batch.digest)).collect::<Vec<_>>();
+        let mut results = Vec::with_capacity(txs.len());
+
+        for fut in txs {
+            results.push(fut.await?);
+        }
+
+        for (tx, nonce) in results {
+            if let Err(_) = self.confirm(&tx).await {
+                self.remove(nonce).await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn digest(&self, id: &String) -> Result<Option<[u8; 32]>> {
+        if !self.exists(id).await? {
+            return Ok(None);
+        }
         match self.instance.hash(id.clone()).call().await {
-            Ok(hash) => Ok(Some(Fingerprint { id: id.clone(), hash: hash._0.0 })),
-            Err(err) => bail!("Failed to get hash: {err}"),
+            Ok(hash) => Ok(Some(hash._0.0)),
+            Err(err) => bail!("failed to call contract function `hash` with id `{}`: {:?}", id, err),
         }
     }
 }
