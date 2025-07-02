@@ -1,11 +1,17 @@
-use crate::domain::{Document, DocumentHasher};
+use crate::domain::{Document, Hasher};
 use anyhow::Result;
 use sha2::{Digest, Sha256};
 
 #[derive(Clone)]
-pub struct Sha256DocumentHasherHelper;
+pub struct Sha256HasherHelper;
 
-impl DocumentHasher for Sha256DocumentHasherHelper {
+impl Sha256HasherHelper {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Hasher for Sha256HasherHelper {
     fn digest(&self, docs: &Vec<Document>) -> Result<[u8; 32]> {
         let mut partial = String::new();
         for doc in docs {

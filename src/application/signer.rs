@@ -1,25 +1,21 @@
-use crate::domain::{Fingerprint, FingerprintRepository};
+use crate::domain::{Batch, SignerRepository};
 use anyhow::Result;
 
 #[derive(Clone)]
-pub struct SignerService<R: FingerprintRepository> {
+pub struct SignerService<R: SignerRepository> {
     repository: R,
 }
 
-impl<R: FingerprintRepository> SignerService<R> {
+impl<R: SignerRepository> SignerService<R> {
     pub fn new(repository: R) -> Self {
         Self { repository }
     }
 
-    pub async fn submit(&self, fingerprint: &Fingerprint) -> Result<[u8; 32]> {
-        self.repository.submit(fingerprint).await
+    pub async fn submit(&self, batches: &Vec<Batch>) -> Result<()> {
+        self.repository.publish(batches).await
     }
 
-    pub async fn confirm(&self, tx: &[u8; 32]) -> Result<[u8; 32]> {
-        self.repository.confirm(tx).await
-    }
-
-    pub async fn find_by_id(&self, id: &String) -> Result<Option<Fingerprint>> {
-        self.repository.find_by_id(id).await
+    pub async fn digest(&self, id: &String) -> Result<Option<[u8; 32]>> {
+        self.repository.digest(id).await
     }
 }

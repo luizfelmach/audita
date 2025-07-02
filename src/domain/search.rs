@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use crate::domain::Document;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]
 pub enum Operator {
@@ -34,3 +36,11 @@ pub struct Query {
     pub or: Option<Vec<Condition>>,
     pub not: Option<Vec<Condition>>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentQuery {
+    pub id: String,
+    pub source: Document,
+}
+
+pub type QueryResult = Vec<DocumentQuery>;

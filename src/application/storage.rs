@@ -1,25 +1,25 @@
-use crate::domain::{DocumentRepository, DocumentStorable, Query};
+use crate::domain::{Batch, Query, QueryResult, StorageRepository};
 use anyhow::Result;
 
 #[derive(Clone)]
-pub struct StorageService<R: DocumentRepository> {
+pub struct StorageService<R: StorageRepository> {
     repository: R,
 }
 
-impl<R: DocumentRepository> StorageService<R> {
+impl<R: StorageRepository> StorageService<R> {
     pub fn new(repository: R) -> Self {
         Self { repository }
     }
 
-    pub async fn store(&self, docs: &Vec<DocumentStorable>) -> Result<()> {
-        self.repository.store(docs).await
+    pub async fn submit(&self, batch: &Batch) -> Result<()> {
+        self.repository.store(batch).await
     }
 
-    pub async fn retrieve_by_id(&self, id: &String) -> Result<Option<Vec<DocumentStorable>>> {
-        self.repository.retrieve_by_id(id).await
+    pub async fn retrieve(&self, id: &String) -> Result<Option<Batch>> {
+        self.repository.retrieve(id).await
     }
 
-    pub async fn search(&self, query: &Query) -> Result<Vec<DocumentStorable>> {
+    pub async fn search(&self, query: &Query) -> Result<QueryResult> {
         self.repository.search(query).await
     }
 }

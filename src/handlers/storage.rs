@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use crate::{
-    domain::{Document, DocumentStorable, Query},
+    domain::{Document, Query, QueryResult},
     error::{AppError, Result},
     state::AppState,
 };
@@ -12,6 +10,7 @@ use axum::{
 };
 use moka::future::Cache;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 pub type CacheHashStorageResponse = Arc<Cache<String, GetHashStorageResponse>>;
 
@@ -28,14 +27,11 @@ pub async fn handle_get_hash_storage(
         return Ok(Json(cached));
     }
 
-    let result = state.services.storage.retrieve_by_id(&id).await.context("An error occurrued when retrieving data from storage")?;
+    let batch = state.services.storage.retrieve(&id).await.context("An error occurrued when retrieving data from storage")?;
 
-    match result {
-        Some(docs) => {
-            let docs = docs.iter().map(|item| item.doc.clone()).collect::<Vec<Document>>();
-            let digest =
-                state.services.hasher.digest(&docs).context("Error while computing the batch hash from the document contents")?;
-            let response = GetHashStorageResponse { id: id.clone(), hash: hex::encode(digest) };
+    match batch {
+        Some(batch) => {
+            let response = GetHashStorageResponse { id: id.clone(), hash: hex::encode(batch.digest) };
             cache.insert(id, response.clone()).await;
             Ok(Json(response))
         }
@@ -50,7 +46,7 @@ pub struct SearchDocsRequest {
 
 #[derive(Serialize)]
 pub struct SearchDocsResponse {
-    docs: Vec<DocumentStorable>,
+    docs: QueryResult,
 }
 
 pub async fn handle_search_docs(State(state): State<AppState>, Json(payload): Json<SearchDocsRequest>) -> Result<Json<SearchDocsResponse>> {

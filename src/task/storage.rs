@@ -3,14 +3,9 @@ use std::sync::Arc;
 
 pub async fn storage(state: Arc<AppState>) {
     let rx = state.rx.storage.clone();
-    let mut buffer = Vec::new();
+    let storage = state.services.storage.clone();
 
-    while let Some(doc) = rx.lock().await.recv().await {
-        buffer.push(doc);
-
-        if buffer.len() >= 1 {
-            let _ = state.services.storage.store(&buffer).await.unwrap();
-            buffer.clear();
-        }
+    while let Some(batch) = rx.lock().await.recv().await {
+        let _ = storage.submit(&batch).await.unwrap();
     }
 }

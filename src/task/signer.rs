@@ -3,20 +3,14 @@ use std::sync::Arc;
 
 pub async fn signer(state: Arc<AppState>) {
     let rx = state.rx.signer.clone();
+    let signer = state.services.signer.clone();
     let mut buffer = Vec::new();
 
-    while let Some(fp) = rx.lock().await.recv().await {
-        buffer.push(fp);
+    while let Some(batch) = rx.lock().await.recv().await {
+        buffer.push(batch);
 
         if buffer.len() >= 1 {
-            let mut txs = Vec::new();
-            for fp in buffer.drain(..) {
-                let tx = state.services.signer.submit(&fp).await.unwrap();
-                txs.push(tx);
-            }
-            for tx in txs {
-                let _confirmed = state.services.signer.confirm(&tx).await.unwrap();
-            }
+            let _ = signer.submit(&buffer).await.unwrap();
         }
     }
 }

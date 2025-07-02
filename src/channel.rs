@@ -1,4 +1,4 @@
-use crate::domain::{Document, DocumentStorable, Fingerprint};
+use crate::domain::{Batch, Document};
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
@@ -8,15 +8,15 @@ use tokio::sync::{
 #[derive(Clone)]
 pub struct TxChannel {
     pub processor: Sender<Document>,
-    pub signer: Sender<Fingerprint>,
-    pub storage: Sender<DocumentStorable>,
+    pub signer: Sender<Batch>,
+    pub storage: Sender<Batch>,
 }
 
 #[derive(Clone)]
 pub struct RxChannel {
     pub processor: Arc<Mutex<Receiver<Document>>>,
-    pub signer: Arc<Mutex<Receiver<Fingerprint>>>,
-    pub storage: Arc<Mutex<Receiver<DocumentStorable>>>,
+    pub signer: Arc<Mutex<Receiver<Batch>>>,
+    pub storage: Arc<Mutex<Receiver<Batch>>>,
 }
 
 pub fn new(size: usize) -> (TxChannel, RxChannel) {

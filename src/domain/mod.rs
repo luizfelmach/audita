@@ -1,7 +1,9 @@
+mod batch;
 mod document;
-mod fingerprint;
+mod repository;
 mod search;
 
+pub use batch::*;
 pub use document::*;
-pub use fingerprint::*;
+pub use repository::*;
 pub use search::*;

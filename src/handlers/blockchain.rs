@@ -15,8 +15,8 @@ pub struct GetHashBlochainResponse {
 }
 
 pub async fn get_hash_blockchain(State(state): State<AppState>, Path(id): Path<String>) -> Result<Json<GetHashBlochainResponse>> {
-    match state.services.signer.find_by_id(&id).await? {
-        Some(fingerprint) => Ok(Json(GetHashBlochainResponse { id: fingerprint.id, hash: hex::encode(fingerprint.hash) })),
+    match state.services.signer.digest(&id).await? {
+        Some(digest) => Ok(Json(GetHashBlochainResponse { id, hash: hex::encode(digest) })),
         None => Err(AppError::NotFound("No records found for the given batch_id".into())),
     }
 }
