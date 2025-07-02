@@ -28,13 +28,13 @@ pub async fn handle_get_hash_storage(
         return Ok(Json(cached));
     }
 
-    let result = state.services.document.retrieve_by_id(&id).await.context("An error occurrued when retrieving data from storage")?;
+    let result = state.services.storage.retrieve_by_id(&id).await.context("An error occurrued when retrieving data from storage")?;
 
     match result {
         Some(docs) => {
             let docs = docs.iter().map(|item| item.doc.clone()).collect::<Vec<Document>>();
             let digest =
-                state.services.document_hasher.digest(&docs).context("Error while computing the batch hash from the document contents")?;
+                state.services.hasher.digest(&docs).context("Error while computing the batch hash from the document contents")?;
             let response = GetHashStorageResponse { id: id.clone(), hash: hex::encode(digest) };
             cache.insert(id, response.clone()).await;
             Ok(Json(response))
@@ -54,6 +54,6 @@ pub struct SearchDocsResponse {
 }
 
 pub async fn handle_search_docs(State(state): State<AppState>, Json(payload): Json<SearchDocsRequest>) -> Result<Json<SearchDocsResponse>> {
-    let docs = state.services.document.search(&payload.query).await.context("An error ocurrued when processing query")?;
+    let docs = state.services.storage.search(&payload.query).await.context("An error ocurrued when processing query")?;
     Ok(Json(SearchDocsResponse { docs }))
 }

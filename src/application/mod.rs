@@ -1,9 +1,9 @@
-mod document_hasher_service;
-mod document_service;
-mod fingerprint_service;
+mod hasher;
 mod services;
+mod signer;
+mod storage;
 
-pub use document_hasher_service::*;
-pub use document_service::*;
-pub use fingerprint_service::*;
+pub use hasher::*;
 pub use services::*;
+pub use signer::*;
+pub use storage::*;

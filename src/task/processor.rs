@@ -19,7 +19,7 @@ pub async fn processor(state: Arc<AppState>) {
         ord += 1;
 
         if buffer.len() >= 5 {
-            let digest = state.services.document_hasher.digest(&buffer).unwrap();
+            let digest = state.services.hasher.digest(&buffer).unwrap();
             let _ = state.tx.signer.send(Fingerprint { hash: digest, id: id.clone() }).await.unwrap();
 
             buffer.clear();

@@ -2,11 +2,11 @@ use crate::domain::{Fingerprint, FingerprintRepository};
 use anyhow::Result;
 
 #[derive(Clone)]
-pub struct FingerprintService<R: FingerprintRepository> {
+pub struct SignerService<R: FingerprintRepository> {
     repository: R,
 }
 
-impl<R: FingerprintRepository> FingerprintService<R> {
+impl<R: FingerprintRepository> SignerService<R> {
     pub fn new(repository: R) -> Self {
         Self { repository }
     }

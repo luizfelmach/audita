@@ -9,7 +9,7 @@ pub async fn storage(state: Arc<AppState>) {
         buffer.push(doc);
 
         if buffer.len() >= 1 {
-            let _ = state.services.document.store(&buffer).await.unwrap();
+            let _ = state.services.storage.store(&buffer).await.unwrap();
             buffer.clear();
         }
     }

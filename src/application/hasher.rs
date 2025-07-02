@@ -2,11 +2,11 @@ use crate::domain::{Document, DocumentHasher};
 use anyhow::Result;
 
 #[derive(Clone)]
-pub struct DocumentHasherService<H: DocumentHasher> {
+pub struct HasherHelper<H: DocumentHasher> {
     hasher: H,
 }
 
-impl<H: DocumentHasher> DocumentHasherService<H> {
+impl<H: DocumentHasher> HasherHelper<H> {
     pub fn new(hasher: H) -> Self {
         Self { hasher }
     }

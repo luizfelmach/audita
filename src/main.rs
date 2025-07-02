@@ -4,7 +4,7 @@ mod config;
 mod domain;
 mod error;
 mod handlers;
-mod infrastructure;
+mod infra;
 mod routes;
 mod setup;
 mod state;

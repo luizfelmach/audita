@@ -2,11 +2,11 @@ use crate::domain::{DocumentRepository, DocumentStorable, Query};
 use anyhow::Result;
 
 #[derive(Clone)]
-pub struct DocumentService<R: DocumentRepository> {
+pub struct StorageService<R: DocumentRepository> {
     repository: R,
 }
 
-impl<R: DocumentRepository> DocumentService<R> {
+impl<R: DocumentRepository> StorageService<R> {
     pub fn new(repository: R) -> Self {
         Self { repository }
     }

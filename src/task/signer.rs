@@ -11,11 +11,11 @@ pub async fn signer(state: Arc<AppState>) {
         if buffer.len() >= 1 {
             let mut txs = Vec::new();
             for fp in buffer.drain(..) {
-                let tx = state.services.fingerprint.submit(&fp).await.unwrap();
+                let tx = state.services.signer.submit(&fp).await.unwrap();
                 txs.push(tx);
             }
             for tx in txs {
-                let _confirmed = state.services.fingerprint.confirm(&tx).await.unwrap();
+                let _confirmed = state.services.signer.confirm(&tx).await.unwrap();
             }
         }
     }
