@@ -1,4 +1,4 @@
-use crate::domain::{Batch, Hasher, Query, QueryResult, StorageRepository};
+use crate::domain::{Batch, DocumentQuery, Hasher, Query, QueryResult, StorageRepository};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -31,7 +31,14 @@ impl StorageRepository for MemoryStorageRepository {
         Ok(self.store.read().await.get(id).cloned())
     }
 
-    async fn search(&self, query: &Query) -> Result<QueryResult> {
-        todo!()
+    async fn search(&self, _query: &Query) -> Result<QueryResult> {
+        let store = self.store.read().await;
+        let mut result = Vec::new();
+        for batch in store.values() {
+            for doc in &batch.documents {
+                result.push(DocumentQuery { id: batch.id.clone(), source: doc.clone() });
+            }
+        }
+        Ok(result)
     }
 }
