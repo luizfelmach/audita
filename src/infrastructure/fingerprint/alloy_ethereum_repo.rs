@@ -86,7 +86,7 @@ impl FingerprintRepository for AlloyEthereumFingerprintRepository {
     async fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>> {
         match self.instance.hash(id.clone()).call().await {
             Ok(hash) => Ok(Some(Fingerprint { id, hash: Digest::from_slice(hash._0.as_slice()) })),
-            Err(_) => Ok(None),
+            Err(err) => bail!("Failed to get hash: {err}"),
         }
     }
 }
