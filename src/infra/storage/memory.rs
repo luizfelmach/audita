@@ -4,26 +4,21 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+#[derive(Clone)]
 pub struct MemoryStorageRepository {
-    store: RwLock<HashMap<String, Batch>>,
-    hasher: Arc<dyn Hasher>,
-}
-
-impl Clone for MemoryStorageRepository {
-    fn clone(&self) -> Self {
-        Self { store: RwLock::new(HashMap::new()), hasher: Arc::clone(&self.hasher) }
-    }
+    store: Arc<RwLock<HashMap<String, Batch>>>,
+    _hasher: Arc<dyn Hasher>,
 }
 
 impl MemoryStorageRepository {
     pub fn new(hasher: Arc<dyn Hasher>) -> Self {
-        Self { store: RwLock::new(HashMap::new()), hasher }
+        Self { store: Arc::new(RwLock::new(HashMap::new())), _hasher: hasher }
     }
 }
 
 impl StorageRepository for MemoryStorageRepository {
     async fn store(&self, batch: &Batch) -> Result<()> {
-        self.store.write().await.insert(batch.id.clone(), batch.clone()).unwrap();
+        self.store.write().await.insert(batch.id.clone(), batch.clone());
         Ok(())
     }
 

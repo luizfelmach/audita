@@ -1,21 +1,16 @@
 use crate::domain::{Batch, SignerRepository};
 use anyhow::Result;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 
+#[derive(Clone)]
 pub struct MemorySignerRepository {
-    digests: RwLock<HashMap<String, [u8; 32]>>,
-}
-
-impl Clone for MemorySignerRepository {
-    fn clone(&self) -> Self {
-        Self { digests: RwLock::new(HashMap::new()) }
-    }
+    digests: Arc<RwLock<HashMap<String, [u8; 32]>>>,
 }
 
 impl MemorySignerRepository {
     pub fn new() -> Self {
-        Self { digests: RwLock::new(HashMap::new()) }
+        Self { digests: Arc::new(RwLock::new(HashMap::new())) }
     }
 }
 
