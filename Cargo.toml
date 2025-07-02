@@ -23,3 +23,4 @@ mime_guess = "2.0.5"
 uuid = { version = "1.17.0", features = ["v4"] }
 moka = { version = "0.12.10", features = ["future"] }
 config = "0.15.11"
+hex = "0.4.3"

@@ -1,6 +1,5 @@
+use crate::domain::{Document, DocumentHasher};
 use anyhow::Result;
-
-use crate::domain::{Digest, Document, DocumentHasher};
 
 #[derive(Clone)]
 pub struct DocumentHasherService<H: DocumentHasher> {
@@ -12,7 +11,7 @@ impl<H: DocumentHasher> DocumentHasherService<H> {
         Self { hasher }
     }
 
-    pub fn hash_documents(&self, docs: &Vec<Document>) -> Result<Digest> {
-        self.hasher.digest_batch(docs)
+    pub fn digest(&self, docs: &Vec<Document>) -> Result<[u8; 32]> {
+        self.hasher.digest(docs)
     }
 }

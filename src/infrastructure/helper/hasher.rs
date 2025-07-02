@@ -1,20 +1,19 @@
-use crate::domain::{Digest, Document, DocumentHasher};
+use crate::domain::{Document, DocumentHasher};
 use anyhow::Result;
-use sha2::{Digest as ShaDigest, Sha256};
+use sha2::{Digest, Sha256};
 
 #[derive(Clone)]
 pub struct Sha256DocumentHasherHelper;
 
 impl DocumentHasher for Sha256DocumentHasherHelper {
-    fn digest_batch(&self, items: &Vec<Document>) -> Result<Digest> {
-        let mut acc = String::new();
-        for doc in items {
-            let json_string = serde_json::to_string(doc)?;
-            let combined = format!("{}{}", acc, json_string);
+    fn digest(&self, docs: &Vec<Document>) -> Result<[u8; 32]> {
+        let mut partial = String::new();
+        for doc in docs {
+            let json = serde_json::to_string(doc)?;
+            let combined = format!("{}{}", partial, json);
             let hash = Sha256::digest(combined.as_bytes());
-            acc = format!("{:x}", hash);
+            partial = format!("{:x}", hash);
         }
-        let final_hash = Sha256::digest(acc.as_bytes());
-        Ok(Digest::from_slice(final_hash.as_slice()))
+        Ok(Sha256::digest(partial.as_bytes()).into())
     }
 }

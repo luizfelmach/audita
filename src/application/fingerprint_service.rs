@@ -1,4 +1,4 @@
-use crate::domain::{Digest, Fingerprint, FingerprintRepository};
+use crate::domain::{Fingerprint, FingerprintRepository};
 use anyhow::Result;
 
 #[derive(Clone)]
@@ -11,15 +11,15 @@ impl<R: FingerprintRepository> FingerprintService<R> {
         Self { repository }
     }
 
-    pub async fn submit(&self, fingerprint: Fingerprint) -> Result<Digest> {
-        self.repository.submit_fingerprint(fingerprint).await
+    pub async fn submit(&self, fingerprint: &Fingerprint) -> Result<[u8; 32]> {
+        self.repository.submit(fingerprint).await
     }
 
-    pub async fn confirm(&self, tx: Digest) -> Result<Digest> {
-        self.repository.confirm_transaction(tx).await
+    pub async fn confirm(&self, tx: &[u8; 32]) -> Result<[u8; 32]> {
+        self.repository.confirm(tx).await
     }
 
-    pub async fn find(&self, id: String) -> Result<Option<Fingerprint>> {
+    pub async fn find_by_id(&self, id: &String) -> Result<Option<Fingerprint>> {
         self.repository.find_by_id(id).await
     }
 }

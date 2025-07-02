@@ -7,7 +7,7 @@ use alloy::{
 use anyhow::{bail, Result};
 use std::time::Duration;
 
-use crate::domain::{Digest, Fingerprint, FingerprintRepository};
+use crate::domain::{Fingerprint, FingerprintRepository};
 
 #[derive(Debug, Clone)]
 pub struct AlloyEthereumFingerprintRepository {
@@ -47,19 +47,19 @@ impl AlloyEthereumFingerprintRepository {
 }
 
 impl FingerprintRepository for AlloyEthereumFingerprintRepository {
-    async fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest> {
+    async fn submit(&self, fingerprint: &Fingerprint) -> Result<[u8; 32]> {
         let mut attempt = 0;
         let nonce = self.nonce().await?;
-        let Fingerprint { id, hash } = fp;
+        let Fingerprint { id, hash } = fingerprint;
 
         loop {
             let result = {
-                let call = self.instance.store(id.clone(), hash.0.into()).nonce(nonce);
+                let call = self.instance.store(id.clone(), hash.into()).nonce(nonce);
                 call.send().await
             };
 
             if let Ok(tx) = result {
-                return Ok(Digest::from_slice(tx.tx_hash().as_slice()));
+                return Ok(tx.tx_hash().0);
             }
 
             attempt += 1;
@@ -71,21 +71,21 @@ impl FingerprintRepository for AlloyEthereumFingerprintRepository {
         }
     }
 
-    async fn confirm_transaction(&self, tx: Digest) -> Result<Digest> {
+    async fn confirm(&self, tx: &[u8; 32]) -> Result<[u8; 32]> {
         let mut interval = tokio::time::interval(Duration::from_millis(500));
         loop {
             interval.tick().await;
-            match self.provider.get_transaction_receipt(tx.0.into()).await {
-                Ok(Some(receipt)) => return Ok(Digest::from_slice(receipt.transaction_hash.as_slice())),
+            match self.provider.get_transaction_receipt(tx.into()).await {
+                Ok(Some(receipt)) => return Ok(receipt.transaction_hash.0),
                 Ok(None) => continue,
                 Err(err) => bail!("failed to get transaction receipt: {err}"),
             }
         }
     }
 
-    async fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>> {
+    async fn find_by_id(&self, id: &String) -> Result<Option<Fingerprint>> {
         match self.instance.hash(id.clone()).call().await {
-            Ok(hash) => Ok(Some(Fingerprint { id, hash: Digest::from_slice(hash._0.as_slice()) })),
+            Ok(hash) => Ok(Some(Fingerprint { id: id.clone(), hash: hash._0.0 })),
             Err(err) => bail!("Failed to get hash: {err}"),
         }
     }

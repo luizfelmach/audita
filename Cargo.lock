@@ -983,6 +983,7 @@ dependencies = [
  "chrono",
  "config",
  "elasticsearch",
+ "hex",
  "mime_guess",
  "moka",
  "prometheus",

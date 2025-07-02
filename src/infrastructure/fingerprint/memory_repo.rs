@@ -1,8 +1,8 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-use crate::domain::{Digest, Fingerprint, FingerprintRepository};
+use crate::domain::{Fingerprint, FingerprintRepository};
 
 #[derive(Default, Clone)]
 pub struct MemoryFingerprintRepository {
@@ -16,18 +16,24 @@ impl MemoryFingerprintRepository {
 }
 
 impl FingerprintRepository for MemoryFingerprintRepository {
-    async fn submit_fingerprint(&self, fp: Fingerprint) -> Result<Digest> {
-        let mut storage = self.store.write().unwrap();
-        storage.insert(fp.id.clone(), fp.clone());
-        Ok(fp.hash)
+    async fn submit(&self, fingerprint: &Fingerprint) -> Result<[u8; 32]> {
+        match self.store.write() {
+            Ok(mut store) => {
+                store.insert(fingerprint.id.clone(), fingerprint.clone());
+                Ok([0u8; 32])
+            }
+            Err(err) => bail!("failed to acquire write lock on fingerprint store: {}", err),
+        }
     }
 
-    async fn confirm_transaction(&self, tx: Digest) -> Result<Digest> {
-        Ok(tx)
+    async fn confirm(&self, tx: &[u8; 32]) -> Result<[u8; 32]> {
+        Ok(*tx)
     }
 
-    async fn find_by_id(&self, id: String) -> Result<Option<Fingerprint>> {
-        let storage = self.store.read().unwrap();
-        Ok(storage.get(&id).cloned())
+    async fn find_by_id(&self, id: &String) -> Result<Option<Fingerprint>> {
+        match self.store.read() {
+            Ok(store) => Ok(store.get(id).cloned()),
+            Err(err) => bail!("failed to acquire write lock on fingerprint find_by_id: {}", err),
+        }
     }
 }

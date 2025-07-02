@@ -1,5 +1,5 @@
 use crate::domain::{DocumentRepository, DocumentStorable, Query};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -15,21 +15,32 @@ impl MemoryDocumentRepository {
 }
 
 impl DocumentRepository for MemoryDocumentRepository {
-    async fn store(&self, items: &Vec<DocumentStorable>) -> Result<()> {
-        let mut storage = self.store.write().unwrap();
-        for item in items {
-            storage.entry(item.id.clone()).or_default().push(item.clone());
+    async fn store(&self, docs: &Vec<DocumentStorable>) -> Result<()> {
+        match self.store.write() {
+            Ok(mut store) => {
+                for item in docs {
+                    store.entry(item.id.clone()).or_default().push(item.clone());
+                }
+                Ok(())
+            }
+            Err(err) => bail!("failed to acquire write lock on document store: {}", err),
         }
-        Ok(())
     }
 
-    async fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>> {
-        let storage = self.store.read().unwrap();
-        Ok(storage.get(&id).cloned().unwrap_or_default())
+    async fn retrieve_by_id(&self, id: &String) -> Result<Option<Vec<DocumentStorable>>> {
+        match self.store.read() {
+            Ok(store) => match store.get(id).cloned() {
+                Some(item) => Ok(Some(item)),
+                None => Ok(None),
+            },
+            Err(err) => bail!("failed to acquire write lock on document retrieve_by_id: {}", err),
+        }
     }
 
-    async fn search(&self, _query: Query) -> Result<Vec<DocumentStorable>> {
-        let storage = self.store.read().unwrap();
-        Ok(storage.values().flat_map(|docs| docs.clone()).collect())
+    async fn search(&self, _query: &Query) -> Result<Vec<DocumentStorable>> {
+        match self.store.read() {
+            Ok(store) => Ok(store.values().flat_map(|docs| docs.clone()).collect()),
+            Err(err) => bail!("failed to acquire write lock on document search: {}", err),
+        }
     }
 }

@@ -22,32 +22,25 @@ pub struct GetHashStorageResponse {
 }
 
 pub async fn handle_get_hash_storage(
-    State(state): State<AppState>, Path(batch_id): Path<String>, Extension(cache): Extension<CacheHashStorageResponse>,
+    State(state): State<AppState>, Path(id): Path<String>, Extension(cache): Extension<CacheHashStorageResponse>,
 ) -> Result<Json<GetHashStorageResponse>> {
-    if let Some(cached) = cache.get(&batch_id).await {
+    if let Some(cached) = cache.get(&id).await {
         return Ok(Json(cached));
     }
 
-    let results = state
-        .services
-        .document
-        .get_documents_by_id(batch_id.clone())
-        .await
-        .context("An error occurrued when retrieving data from storage")?;
+    let result = state.services.document.retrieve_by_id(&id).await.context("An error occurrued when retrieving data from storage")?;
 
-    if results.is_empty() {
-        return Err(AppError::NotFound("No records found for the given batch_id".into()));
+    match result {
+        Some(docs) => {
+            let docs = docs.iter().map(|item| item.doc.clone()).collect::<Vec<Document>>();
+            let digest =
+                state.services.document_hasher.digest(&docs).context("Error while computing the batch hash from the document contents")?;
+            let response = GetHashStorageResponse { id: id.clone(), hash: hex::encode(digest) };
+            cache.insert(id, response.clone()).await;
+            Ok(Json(response))
+        }
+        None => Err(AppError::NotFound("No records found for the given batch_id".into())),
     }
-
-    let docs = results.iter().map(|item| item.doc.clone()).collect::<Vec<Document>>();
-
-    let digest =
-        state.services.document_hasher.hash_documents(&docs).context("Error while computing the batch hash from the document contents")?;
-
-    let response = GetHashStorageResponse { id: batch_id.clone(), hash: digest.to_hex() };
-    cache.insert(batch_id, response.clone()).await;
-
-    Ok(Json(response))
 }
 
 #[derive(Deserialize)]
@@ -61,6 +54,6 @@ pub struct SearchDocsResponse {
 }
 
 pub async fn handle_search_docs(State(state): State<AppState>, Json(payload): Json<SearchDocsRequest>) -> Result<Json<SearchDocsResponse>> {
-    let docs = state.services.document.search_documents(payload.query).await.context("An error ocurrued when processing query")?;
+    let docs = state.services.document.search(&payload.query).await.context("An error ocurrued when processing query")?;
     Ok(Json(SearchDocsResponse { docs }))
 }

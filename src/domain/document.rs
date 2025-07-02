@@ -1,4 +1,4 @@
-use crate::domain::{Digest, Query};
+use crate::domain::Query;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -13,11 +13,11 @@ pub struct DocumentStorable {
 }
 
 pub trait DocumentRepository {
-    async fn store(&self, items: &Vec<DocumentStorable>) -> Result<()>;
-    async fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>>;
-    async fn search(&self, query: Query) -> Result<Vec<DocumentStorable>>;
+    async fn store(&self, docs: &Vec<DocumentStorable>) -> Result<()>;
+    async fn retrieve_by_id(&self, id: &String) -> Result<Option<Vec<DocumentStorable>>>;
+    async fn search(&self, query: &Query) -> Result<Vec<DocumentStorable>>;
 }
 
 pub trait DocumentHasher {
-    fn digest_batch(&self, items: &Vec<Document>) -> Result<Digest>;
+    fn digest(&self, docs: &Vec<Document>) -> Result<[u8; 32]>;
 }

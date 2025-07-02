@@ -95,15 +95,15 @@ impl ElasticsearchDocumentRepository {
 }
 
 impl DocumentRepository for ElasticsearchDocumentRepository {
-    async fn store(&self, items: &Vec<DocumentStorable>) -> Result<()> {
-        if items.is_empty() {
+    async fn store(&self, docs: &Vec<DocumentStorable>) -> Result<()> {
+        if docs.is_empty() {
             return Ok(());
         }
 
         let mut ops: Vec<BulkOperation<Map<String, Value>>> = Vec::new();
         let index = Local::now().format("%Y.%m.%d").to_string();
 
-        for item in items.iter() {
+        for item in docs.iter() {
             let mut content = item.doc.clone();
             content.insert("audita_id".into(), item.id.clone().into());
             content.insert("audita_ord".into(), item.ord.into());
@@ -121,7 +121,7 @@ impl DocumentRepository for ElasticsearchDocumentRepository {
         Ok(())
     }
 
-    async fn retrieve_many(&self, id: String) -> Result<Vec<DocumentStorable>> {
+    async fn retrieve_by_id(&self, id: &String) -> Result<Option<Vec<DocumentStorable>>> {
         let mut results = Vec::new();
         let mut after = None;
 
@@ -157,10 +157,10 @@ impl DocumentRepository for ElasticsearchDocumentRepository {
             after = hits.last().and_then(|hit| hit["sort"].as_array().cloned());
         }
 
-        Ok(results)
+        Ok(Some(results))
     }
 
-    async fn search(&self, query: Query) -> Result<Vec<DocumentStorable>> {
+    async fn search(&self, query: &Query) -> Result<Vec<DocumentStorable>> {
         let query = self.interpret(&query)?;
 
         let search = json!({
