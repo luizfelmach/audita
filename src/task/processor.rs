@@ -12,7 +12,7 @@ pub async fn processor(state: Arc<AppState>) {
     let signer = state.tx.signer.clone();
     let hasher = Sha256HasherHelper::new();
     let mut buffer = Vec::new();
-    let id = Uuid::new_v4().to_string();
+    let mut id = Uuid::new_v4().to_string();
 
     while let Some(document) = rx.lock().await.recv().await {
         buffer.push(document);
@@ -23,6 +23,7 @@ pub async fn processor(state: Arc<AppState>) {
             let _ = storage.send(batch.clone()).await.unwrap();
             let _ = signer.send(batch.clone()).await.unwrap();
             buffer.clear();
+            id = Uuid::new_v4().to_string();
         }
     }
 }
