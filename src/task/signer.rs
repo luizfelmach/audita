@@ -11,6 +11,7 @@ pub async fn signer(state: Arc<AppState>) {
 
         if buffer.len() >= 1 {
             let _ = signer.submit(&buffer).await.unwrap();
+            buffer.clear();
         }
     }
 }

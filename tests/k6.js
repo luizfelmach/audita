@@ -15,7 +15,7 @@ function elasticTimestamp() {
 }
 
 export default function () {
-  const url = 'http://127.0.0.1:8080';
+  const url = 'http://127.0.0.1:8080/api';
 
   const payload = JSON.stringify({
     ip: randomIP(),
