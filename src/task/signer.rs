@@ -1,17 +1,23 @@
 use crate::state::AppState;
 use std::sync::Arc;
+use tokio::task;
 
 pub async fn signer(state: Arc<AppState>) {
     let rx = state.rx.signer.clone();
     let signer = state.services.signer.clone();
-    let mut buffer = Vec::new();
 
     while let Some(batch) = rx.lock().await.recv().await {
-        buffer.push(batch);
+        let signer = signer.clone();
 
-        if buffer.len() >= 1 {
-            let _ = signer.submit(&buffer).await.unwrap();
-            buffer.clear();
-        }
+        task::spawn(async move {
+            match signer.submit(&batch).await {
+                Ok(_) => {
+                    println!("batch completed ({})", batch.id);
+                }
+                Err(err) => {
+                    eprintln!("Failed to submit batch: {:?}", err);
+                }
+            }
+        });
     }
 }

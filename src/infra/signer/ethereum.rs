@@ -1,4 +1,4 @@
-use crate::domain::SignerRepository;
+use crate::domain::{Batch, SignerRepository};
 use alloy::{
     network::{EthereumWallet, TransactionBuilder},
     primitives::U256,
@@ -15,6 +15,7 @@ use std::{
     },
     time::Duration,
 };
+use tokio::{runtime::Handle, sync::Semaphore};
 
 #[derive(Clone)]
 pub struct EthereumSignerRepository {
@@ -22,6 +23,7 @@ pub struct EthereumSignerRepository {
     signer: PrivateKeySigner,
     instance: Auditability::AuditabilityInstance<(), DynProvider>,
     nonce: Arc<AtomicU64>,
+    pending: Arc<Semaphore>,
 }
 
 sol! {
@@ -43,7 +45,11 @@ impl EthereumSignerRepository {
         let provider = DynProvider::new(provider);
         let contract = contract.parse()?;
         let instance = Auditability::new(contract, provider.clone());
-        Ok(Self { provider, signer, instance, nonce: Arc::new(AtomicU64::new(0)) })
+        let address = signer.address();
+
+        let nonce = tokio::task::block_in_place(|| Handle::current().block_on(async { provider.get_transaction_count(address).await }))?;
+
+        Ok(Self { provider, signer, instance, nonce: Arc::new(AtomicU64::new(nonce)), pending: Arc::new(Semaphore::new(3000)) })
     }
 
     async fn nonce(&self) -> Result<u64> {
@@ -69,7 +75,10 @@ impl EthereumSignerRepository {
         let call = self.instance.store(id.clone(), hash.into()).nonce(nonce).send().await;
         match call {
             Ok(tx) => Ok((tx.tx_hash().0, nonce)),
-            Err(err) => bail!("failed to call contract function `store` with id `{}` and hash `{:?}`: {:?}", id, hash, err),
+            Err(err) => {
+                self.remove(nonce).await?;
+                bail!("failed to call contract function `store` with id `{}` and hash `{:?}`: {:?}", id, hash, err);
+            }
         }
     }
 
@@ -106,22 +115,13 @@ impl Default for EthereumSignerRepository {
 }
 
 impl SignerRepository for EthereumSignerRepository {
-    async fn publish(&self, batches: &Vec<crate::domain::Batch>) -> Result<()> {
-        let nonce = self.nonce().await?;
-        self.nonce.store(nonce, Ordering::SeqCst);
-        let txs: Vec<_> = batches.iter().map(|batch| self.store(&batch.id, &batch.digest)).collect::<Vec<_>>();
-        let mut results = Vec::with_capacity(txs.len());
-
-        for fut in txs {
-            results.push(fut.await?);
+    async fn publish(&self, batch: &Batch) -> Result<()> {
+        let permit = self.pending.clone().acquire_owned().await?;
+        let (tx, nonce) = self.store(&batch.id, &batch.digest).await?;
+        if let Err(_) = self.confirm(&tx).await {
+            self.remove(nonce).await?;
         }
-
-        for (tx, nonce) in results {
-            if let Err(_) = self.confirm(&tx).await {
-                self.remove(nonce).await?;
-            }
-        }
-
+        drop(permit);
         Ok(())
     }
 

@@ -15,11 +15,9 @@ impl MemorySignerRepository {
 }
 
 impl SignerRepository for MemorySignerRepository {
-    async fn publish(&self, batches: &Vec<Batch>) -> Result<()> {
+    async fn publish(&self, batch: &Batch) -> Result<()> {
         let mut digests = self.digests.write().await;
-        for batch in batches {
-            digests.insert(batch.id.clone(), batch.digest);
-        }
+        digests.insert(batch.id.clone(), batch.digest);
         Ok(())
     }
 

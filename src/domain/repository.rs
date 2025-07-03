@@ -2,7 +2,7 @@ use crate::domain::{Batch, Document, Query, QueryResult};
 use anyhow::Result;
 
 pub trait SignerRepository {
-    async fn publish(&self, batches: &Vec<Batch>) -> Result<()>;
+    async fn publish(&self, batch: &Batch) -> Result<()>;
     async fn digest(&self, id: &String) -> Result<Option<[u8; 32]>>;
 }
 

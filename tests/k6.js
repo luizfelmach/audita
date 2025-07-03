@@ -1,8 +1,8 @@
-import { sleep } from 'k6';
-import http from 'k6/http';
+import { sleep } from "k6";
+import http from "k6/http";
 
 export const options = {
-  duration: '1m',
+  duration: "1m",
   vus: 500,
 };
 
@@ -15,22 +15,21 @@ function elasticTimestamp() {
 }
 
 export default function () {
-  const url = 'http://127.0.0.1:8080/api';
+  const url = "http://127.0.0.1:8080/api";
 
   const payload = JSON.stringify({
     ip: randomIP(),
     timestamp: elasticTimestamp(),
-    mac: '00:00:00:00:00:00',
-    port: Math.floor(Math.random() * 65536)
+    mac: "00:00:00:00:00:00",
+    port: Math.floor(Math.random() * 65536),
   });
 
   const params = {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   };
 
   http.post(url, payload, params);
   sleep(0.01);
 }
-

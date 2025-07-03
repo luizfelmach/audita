@@ -11,8 +11,8 @@ impl<R: SignerRepository> SignerService<R> {
         Self { repository }
     }
 
-    pub async fn submit(&self, batches: &Vec<Batch>) -> Result<()> {
-        self.repository.publish(batches).await
+    pub async fn submit(&self, batch: &Batch) -> Result<()> {
+        self.repository.publish(batch).await
     }
 
     pub async fn digest(&self, id: &String) -> Result<Option<[u8; 32]>> {
