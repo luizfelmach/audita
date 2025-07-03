@@ -8,13 +8,20 @@ use alloy::{
     sol,
 };
 use anyhow::{bail, Result};
-use std::time::Duration;
+use std::{
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 
 #[derive(Clone)]
 pub struct EthereumSignerRepository {
     provider: DynProvider,
     signer: PrivateKeySigner,
     instance: Auditability::AuditabilityInstance<(), DynProvider>,
+    nonce: Arc<AtomicU64>,
 }
 
 sol! {
@@ -36,7 +43,7 @@ impl EthereumSignerRepository {
         let provider = DynProvider::new(provider);
         let contract = contract.parse()?;
         let instance = Auditability::new(contract, provider.clone());
-        Ok(Self { provider, signer, instance })
+        Ok(Self { provider, signer, instance, nonce: Arc::new(AtomicU64::new(0)) })
     }
 
     async fn nonce(&self) -> Result<u64> {
@@ -58,7 +65,7 @@ impl EthereumSignerRepository {
     }
 
     async fn store(&self, id: &String, hash: &[u8; 32]) -> Result<([u8; 32], u64)> {
-        let nonce = self.nonce().await?;
+        let nonce = self.nonce.fetch_add(1, Ordering::SeqCst);
         let call = self.instance.store(id.clone(), hash.into()).nonce(nonce).send().await;
         match call {
             Ok(tx) => Ok((tx.tx_hash().0, nonce)),
@@ -100,6 +107,8 @@ impl Default for EthereumSignerRepository {
 
 impl SignerRepository for EthereumSignerRepository {
     async fn publish(&self, batches: &Vec<crate::domain::Batch>) -> Result<()> {
+        let nonce = self.nonce().await?;
+        self.nonce.store(nonce, Ordering::SeqCst);
         let txs: Vec<_> = batches.iter().map(|batch| self.store(&batch.id, &batch.digest)).collect::<Vec<_>>();
         let mut results = Vec::with_capacity(txs.len());
 
