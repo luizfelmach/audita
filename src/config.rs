@@ -1,6 +1,9 @@
 use anyhow::Result;
 use config::{Config, Environment, File};
+use once_cell::sync::Lazy;
 use serde::Deserialize;
+
+pub static CONFIG: Lazy<AppConfig> = Lazy::new(|| AppConfig::init().expect("Failed to load configuration"));
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
@@ -29,7 +32,7 @@ pub struct ElasticConfig {
 }
 
 impl AppConfig {
-    pub fn new() -> Result<Self> {
+    fn init() -> Result<Self> {
         let mut builder = Config::builder().add_source(File::with_name("/etc/audita/config.toml").required(false));
         if let Ok(home) = std::env::var("HOME") {
             builder = builder.add_source(File::with_name(&format!("{}/.config/audita/config.toml", home)).required(false));
