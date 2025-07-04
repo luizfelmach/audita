@@ -1,7 +1,6 @@
 use anyhow::Result;
 use config::{Config, Environment, File};
 use serde::Deserialize;
-use std::sync::Arc;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
@@ -30,7 +29,7 @@ pub struct ElasticConfig {
 }
 
 impl AppConfig {
-    pub fn init() -> Result<Arc<Self>> {
+    pub fn init() -> Result<Self> {
         let mut builder = Config::builder().add_source(File::with_name("/etc/audita/config.toml").required(false));
         if let Ok(home) = std::env::var("HOME") {
             builder = builder.add_source(File::with_name(&format!("{}/.config/audita/config.toml", home)).required(false));
@@ -41,6 +40,6 @@ impl AppConfig {
             .add_source(Environment::with_prefix("AUDITA"))
             .build()?;
 
-        Ok(Arc::new(cfg.try_deserialize()?))
+        Ok(cfg.try_deserialize()?)
     }
 }

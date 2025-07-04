@@ -13,14 +13,14 @@ pub struct Services {
 }
 
 impl Services {
-    pub fn init(config: Arc<AppConfig>) -> Result<Self> {
-        let storage = make_storage_service(config.clone())?;
-        let signer = make_signer_service(config.clone())?;
+    pub fn init(config: &AppConfig) -> Result<Self> {
+        let storage = make_storage_service(&config)?;
+        let signer = make_signer_service(&config)?;
         Ok(Self { storage, signer })
     }
 }
 
-fn make_storage_service(config: Arc<AppConfig>) -> Result<StorageService<ElasticsearchStorageRepository>> {
+fn make_storage_service(config: &AppConfig) -> Result<StorageService<ElasticsearchStorageRepository>> {
     let elastic = &config.elastic;
     let hasher = Arc::new(Sha256HasherHelper::new());
     let storage = ElasticsearchStorageRepository::new(
@@ -33,7 +33,7 @@ fn make_storage_service(config: Arc<AppConfig>) -> Result<StorageService<Elastic
     Ok(StorageService::new(storage))
 }
 
-fn make_signer_service(config: Arc<AppConfig>) -> Result<SignerService<EthereumSignerRepository>> {
+fn make_signer_service(config: &AppConfig) -> Result<SignerService<EthereumSignerRepository>> {
     let ethereum = &config.ethereum;
     let signer = EthereumSignerRepository::new(
         ethereum.url.clone(),

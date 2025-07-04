@@ -9,14 +9,22 @@ mod routes;
 mod state;
 mod task;
 
-use crate::{config::AppConfig, state::AppState};
+use crate::state::AppState;
+use tracing::{debug, error};
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let config = AppConfig::init().expect("Failed to load configuration");
-    let state = AppState::init(config.clone()).expect("Failed to setup state");
+    let state = match AppState::init() {
+        Ok(state) => state,
+        Err(err) => {
+            error!("Failed to initialize application state. Reason: {}", err);
+            std::process::exit(1);
+        }
+    };
+
+    debug!(?state.config);
 
     tokio::select! {
         _ = task::processor(state.clone()) => {},

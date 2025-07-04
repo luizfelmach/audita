@@ -8,16 +8,18 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub tx: TxChannel,
-    pub rx: RxChannel,
-    pub services: Services,
+    pub tx: Arc<TxChannel>,
+    pub rx: Arc<RxChannel>,
+    pub services: Arc<Services>,
     pub config: Arc<AppConfig>,
 }
 
 impl AppState {
-    pub fn init(config: Arc<AppConfig>) -> Result<Arc<Self>> {
-        let services = Services::init(config.clone())?;
+    pub fn init() -> Result<Arc<Self>> {
+        let config = AppConfig::init()?;
+        let services = Services::init(&config)?;
         let (tx, rx) = channel::init(config.queue_size);
-        Ok(Arc::new(AppState { tx, rx, services, config }))
+
+        Ok(Arc::new(AppState { tx: Arc::new(tx), rx: Arc::new(rx), services: Arc::new(services), config: Arc::new(config) }))
     }
 }
