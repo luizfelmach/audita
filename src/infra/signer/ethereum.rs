@@ -15,7 +15,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::{runtime::Handle, sync::Semaphore, task};
+use tokio::{runtime::Handle, sync::Semaphore, task, time::sleep};
 
 #[derive(Clone)]
 pub struct EthereumSignerRepository {
@@ -70,16 +70,11 @@ impl EthereumSignerRepository {
         }
     }
 
-    async fn store(&self, id: &String, hash: &[u8; 32]) -> Result<([u8; 32], u64)> {
-        let nonce = self.nonce.fetch_add(1, Ordering::SeqCst);
-        let call = self.instance.store(id.clone(), hash.into()).nonce(nonce).send().await;
-        match call {
-            Ok(tx) => Ok((tx.tx_hash().0, nonce)),
-            Err(err) => {
-                self.remove(nonce).await?;
-                bail!("failed to call contract function `store` with id `{}` and hash `{:?}`: {:?}", id, hash, err);
-            }
-        }
+    async fn store(&self, id: &String, hash: &[u8; 32], nonce: u64) -> Result<()> {
+        let call = self.instance.store(id.clone(), hash.into()).nonce(nonce).send().await?;
+        let tx = call.tx_hash().0;
+        let _ = self.confirm(&tx).await?;
+        Ok(())
     }
 
     async fn remove(&self, nonce: u64) -> Result<()> {
@@ -116,12 +111,26 @@ impl Default for EthereumSignerRepository {
 
 impl SignerRepository for EthereumSignerRepository {
     async fn publish(&self, batch: &Batch) -> Result<()> {
-        let permit = self.pending.clone().acquire_owned().await?;
-        let (tx, nonce) = self.store(&batch.id, &batch.digest).await?;
-        if let Err(_) = self.confirm(&tx).await {
-            self.remove(nonce).await?;
+        let _permit = self.pending.clone().acquire_owned().await?;
+
+        let nonce = self.nonce.fetch_add(1, Ordering::SeqCst);
+        let mut attempts = 0;
+        let max_attempts = 3;
+
+        loop {
+            attempts += 1;
+            match self.store(&batch.id, &batch.digest, nonce).await {
+                Ok(()) => break,
+                Err(_) if attempts <= max_attempts => {
+                    sleep(Duration::from_millis(100 * attempts)).await;
+                }
+                Err(err) => {
+                    self.remove(nonce).await?;
+                    bail!("failed to send transaction after {} attempts: {}", attempts, err)
+                }
+            }
         }
-        drop(permit);
+
         Ok(())
     }
 
