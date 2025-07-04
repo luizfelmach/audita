@@ -11,19 +11,19 @@ pub async fn processor(state: Arc<AppState>) {
     let storage = state.tx.storage.clone();
     let signer = state.tx.signer.clone();
     let hasher = Sha256HasherHelper::new();
+
+    let batch_size = state.config.batch_size;
     let mut buffer = Vec::new();
-    let mut id = Uuid::new_v4().to_string();
 
     while let Some(document) = rx.lock().await.recv().await {
         buffer.push(document);
 
-        if buffer.len() >= state.config.batch_size {
+        if buffer.len() >= batch_size {
+            let id = Uuid::new_v4().to_string();
             let digest = hasher.digest(&buffer).unwrap();
-            let batch = Batch { id: id.clone(), documents: buffer.clone(), digest };
+            let batch = Batch { id: id.clone(), documents: std::mem::take(&mut buffer), digest };
             let _ = storage.send(batch.clone()).await.unwrap();
             let _ = signer.send(batch.clone()).await.unwrap();
-            buffer.clear();
-            id = Uuid::new_v4().to_string();
         }
     }
 }
