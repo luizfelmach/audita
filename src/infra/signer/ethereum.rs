@@ -23,7 +23,7 @@ pub struct EthereumSignerRepository {
     signer: PrivateKeySigner,
     instance: Auditability::AuditabilityInstance<(), DynProvider>,
     nonce: Arc<AtomicU64>,
-    pending: Arc<Semaphore>,
+    max_tx_pending: Arc<Semaphore>,
 }
 
 sol! {
@@ -37,7 +37,7 @@ sol! {
 }
 
 impl EthereumSignerRepository {
-    pub fn new(url: String, contract: String, pk: String) -> Result<Self> {
+    pub fn new(url: String, contract: String, pk: String, max_tx_pending: usize) -> Result<Self> {
         let signer: PrivateKeySigner = pk.parse()?;
         let wallet = EthereumWallet::from(signer.clone());
         let url = url.parse()?;
@@ -49,7 +49,13 @@ impl EthereumSignerRepository {
 
         let nonce = task::block_in_place(|| Handle::current().block_on(async { provider.get_transaction_count(address).await }))?;
 
-        Ok(Self { provider, signer, instance, nonce: Arc::new(AtomicU64::new(nonce)), pending: Arc::new(Semaphore::new(100)) })
+        Ok(Self {
+            provider,
+            signer,
+            instance,
+            nonce: Arc::new(AtomicU64::new(nonce)),
+            max_tx_pending: Arc::new(Semaphore::new(max_tx_pending)),
+        })
     }
 
     async fn nonce(&self) -> Result<u64> {
@@ -98,20 +104,9 @@ impl EthereumSignerRepository {
     }
 }
 
-impl Default for EthereumSignerRepository {
-    fn default() -> Self {
-        Self::new(
-            "http://localhost:8545".into(),
-            "0x42699A7612A82f1d9C36148af9C77354759b210b".into(),
-            "0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63".into(),
-        )
-        .unwrap()
-    }
-}
-
 impl SignerRepository for EthereumSignerRepository {
     async fn publish(&self, batch: &Batch) -> Result<()> {
-        let _permit = self.pending.clone().acquire_owned().await?;
+        let _permit = self.max_tx_pending.clone().acquire_owned().await?;
 
         let nonce = self.nonce.fetch_add(1, Ordering::SeqCst);
         let mut attempts = 0;

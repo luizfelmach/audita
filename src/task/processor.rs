@@ -17,7 +17,7 @@ pub async fn processor(state: Arc<AppState>) {
     while let Some(document) = rx.lock().await.recv().await {
         buffer.push(document);
 
-        if buffer.len() >= 2 {
+        if buffer.len() >= state.config.batch_size {
             let digest = hasher.digest(&buffer).unwrap();
             let batch = Batch { id: id.clone(), documents: buffer.clone(), digest };
             let _ = storage.send(batch.clone()).await.unwrap();
