@@ -25,11 +25,4 @@ async fn main() {
     };
 
     debug!(?state.config);
-
-    tokio::select! {
-        _ = task::processor(state.clone()) => {},
-        _ = task::signer(state.clone()) => {},
-        _ = task::storage(state.clone()) => {},
-        _ = task::server(state.clone()) => {},
-    }
 }
