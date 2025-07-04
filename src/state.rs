@@ -17,7 +17,7 @@ impl AppState {
     pub fn new() -> Arc<Self> {
         let config = AppConfig::new().expect("Failed to load config");
         let services = Services::new();
-        let (tx, rx) = channel::new(config.queue_capacity);
+        let (tx, rx) = channel::new(config.queue_size);
 
         Arc::new(AppState { config, tx, rx, services })
     }
