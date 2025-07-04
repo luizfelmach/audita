@@ -1,5 +1,4 @@
 use crate::{
-    config::CONFIG,
     domain::{Batch, Hasher},
     infra::helper::Sha256HasherHelper,
     state::AppState,
@@ -18,7 +17,7 @@ pub async fn processor(state: Arc<AppState>) {
     while let Some(document) = rx.lock().await.recv().await {
         buffer.push(document);
 
-        if buffer.len() >= CONFIG.batch_size {
+        if buffer.len() >= state.config.batch_size {
             let digest = hasher.digest(&buffer).unwrap();
             let batch = Batch { id: id.clone(), documents: buffer.clone(), digest };
             let _ = storage.send(batch.clone()).await.unwrap();

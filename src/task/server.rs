@@ -1,4 +1,3 @@
-use crate::config::CONFIG;
 use crate::{handlers::ui::serve_ui, routes, state::AppState};
 use axum::Router;
 use std::{process, sync::Arc};
@@ -8,7 +7,7 @@ use tower_http::normalize_path::NormalizePathLayer;
 use tracing::{error, info};
 
 pub async fn server(state: Arc<AppState>) {
-    let url = format!("{}:{}", CONFIG.host, CONFIG.port);
+    let url = format!("{}:{}", state.config.host, state.config.port);
     let bind = net::TcpListener::bind(&url).await;
 
     let Ok(listener) = bind else {

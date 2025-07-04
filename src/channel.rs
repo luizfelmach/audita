@@ -1,7 +1,4 @@
-use crate::{
-    config::CONFIG,
-    domain::{Batch, Document},
-};
+use crate::domain::{Batch, Document};
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
@@ -22,8 +19,7 @@ pub struct RxChannel {
     pub storage: Arc<Mutex<Receiver<Batch>>>,
 }
 
-pub fn init() -> (TxChannel, RxChannel) {
-    let queue_size = CONFIG.queue_size;
+pub fn init(queue_size: usize) -> (TxChannel, RxChannel) {
     let (processor_tx, processor_rx) = mpsc::channel(queue_size);
     let (signer_tx, signer_rx) = mpsc::channel(queue_size);
     let (storage_tx, storage_rx) = mpsc::channel(queue_size);

@@ -1,6 +1,6 @@
 use crate::{
     application::{SignerService, StorageService},
-    config::CONFIG,
+    config::AppConfig,
     infra::{helper::Sha256HasherHelper, signer::EthereumSignerRepository, storage::ElasticsearchStorageRepository},
 };
 use anyhow::Result;
@@ -13,13 +13,15 @@ pub struct Services {
 }
 
 impl Services {
-    pub fn init() -> Result<Self> {
-        Ok(Self { storage: make_storage_service()?, signer: make_signer_service()? })
+    pub fn init(config: Arc<AppConfig>) -> Result<Self> {
+        let storage = make_storage_service(config.clone())?;
+        let signer = make_signer_service(config.clone())?;
+        Ok(Self { storage, signer })
     }
 }
 
-fn make_storage_service() -> Result<StorageService<ElasticsearchStorageRepository>> {
-    let elastic = &CONFIG.elastic;
+fn make_storage_service(config: Arc<AppConfig>) -> Result<StorageService<ElasticsearchStorageRepository>> {
+    let elastic = &config.elastic;
     let hasher = Arc::new(Sha256HasherHelper::new());
     let storage = ElasticsearchStorageRepository::new(
         elastic.url.clone(),
@@ -31,8 +33,8 @@ fn make_storage_service() -> Result<StorageService<ElasticsearchStorageRepositor
     Ok(StorageService::new(storage))
 }
 
-fn make_signer_service() -> Result<SignerService<EthereumSignerRepository>> {
-    let ethereum = &CONFIG.ethereum;
+fn make_signer_service(config: Arc<AppConfig>) -> Result<SignerService<EthereumSignerRepository>> {
+    let ethereum = &config.ethereum;
     let signer = EthereumSignerRepository::new(
         ethereum.url.clone(),
         ethereum.contract.clone(),

@@ -6,17 +6,17 @@ mod error;
 mod handlers;
 mod infra;
 mod routes;
-mod setup;
 mod state;
 mod task;
 
-use crate::state::AppState;
+use crate::{config::AppConfig, state::AppState};
 
 #[tokio::main]
 async fn main() {
-    setup::logger();
+    tracing_subscriber::fmt::init();
 
-    let state = AppState::new();
+    let config = AppConfig::init().expect("Failed to load configuration");
+    let state = AppState::init(config.clone()).expect("Failed to setup state");
 
     tokio::select! {
         _ = task::processor(state.clone()) => {},
