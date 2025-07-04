@@ -15,7 +15,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::{runtime::Handle, sync::Semaphore};
+use tokio::{runtime::Handle, sync::Semaphore, task};
 
 #[derive(Clone)]
 pub struct EthereumSignerRepository {
@@ -47,9 +47,9 @@ impl EthereumSignerRepository {
         let instance = Auditability::new(contract, provider.clone());
         let address = signer.address();
 
-        let nonce = tokio::task::block_in_place(|| Handle::current().block_on(async { provider.get_transaction_count(address).await }))?;
+        let nonce = task::block_in_place(|| Handle::current().block_on(async { provider.get_transaction_count(address).await }))?;
 
-        Ok(Self { provider, signer, instance, nonce: Arc::new(AtomicU64::new(nonce)), pending: Arc::new(Semaphore::new(3000)) })
+        Ok(Self { provider, signer, instance, nonce: Arc::new(AtomicU64::new(nonce)), pending: Arc::new(Semaphore::new(100)) })
     }
 
     async fn nonce(&self) -> Result<u64> {
