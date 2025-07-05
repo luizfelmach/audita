@@ -14,15 +14,15 @@ async fn main() {
 
     let ctx = Context::init().unwrap();
 
-    for _ in 0..10 {
+    for _ in 0..100 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::worker::run(ctx));
     }
-    for _ in 0..10 {
+    for _ in 0..100 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::signer::run(ctx));
     }
-    for _ in 0..10 {
+    for _ in 0..100 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::storage::run(ctx));
     }
