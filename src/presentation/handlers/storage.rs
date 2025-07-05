@@ -1,9 +1,9 @@
 use crate::{
-    domain::{Document, Query, QueryResult},
-    error::{AppError, Result},
-    state::AppState,
+    context::Context,
+    domain::{Query, QueryResult},
+    presentation::error::{AppError, HttpResult},
 };
-use anyhow::Context;
+use anyhow::Context as AnyhowContext;
 use axum::{
     extract::{Path, State},
     Extension, Json,
@@ -20,14 +20,14 @@ pub struct GetHashStorageResponse {
     hash: String,
 }
 
-pub async fn handle_get_hash_storage(
-    State(state): State<AppState>, Path(id): Path<String>, Extension(cache): Extension<CacheHashStorageResponse>,
-) -> Result<Json<GetHashStorageResponse>> {
+pub async fn get_hash_storage(
+    State(ctx): State<Context>, Path(id): Path<String>, Extension(cache): Extension<CacheHashStorageResponse>,
+) -> HttpResult<Json<GetHashStorageResponse>> {
     if let Some(cached) = cache.get(&id).await {
         return Ok(Json(cached));
     }
 
-    let batch = state.services.storage.retrieve(&id).await.context("An error occurrued when retrieving data from storage")?;
+    let batch = ctx.storage.retrieve(&id).await.context("An error occurrued when retrieving data from storage")?;
 
     match batch {
         Some(batch) => {
@@ -40,16 +40,18 @@ pub async fn handle_get_hash_storage(
 }
 
 #[derive(Deserialize)]
-pub struct SearchDocsRequest {
+pub struct SearchDocumentsRequest {
     query: Query,
 }
 
 #[derive(Serialize)]
-pub struct SearchDocsResponse {
+pub struct SearchDocumentsResponse {
     docs: QueryResult,
 }
 
-pub async fn handle_search_docs(State(state): State<AppState>, Json(payload): Json<SearchDocsRequest>) -> Result<Json<SearchDocsResponse>> {
-    let docs = state.services.storage.search(&payload.query).await.context("An error ocurrued when processing query")?;
-    Ok(Json(SearchDocsResponse { docs }))
+pub async fn search_documents(
+    State(ctx): State<Context>, Json(payload): Json<SearchDocumentsRequest>,
+) -> HttpResult<Json<SearchDocumentsResponse>> {
+    let docs = ctx.storage.search(&payload.query).await.context("An error ocurrued when processing query")?;
+    Ok(Json(SearchDocumentsResponse { docs }))
 }

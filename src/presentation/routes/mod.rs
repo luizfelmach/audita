@@ -1,15 +1,15 @@
-pub mod blockchain;
-pub mod doc;
+pub mod document;
 pub mod metrics;
+pub mod signer;
 pub mod storage;
 
-use crate::state::AppState;
+use crate::context::Context;
 use axum::{routing::get, Router};
 
-pub fn api() -> Router<AppState> {
+pub fn api() -> Router<Context> {
     Router::new()
-        .merge(doc::routes())
-        .nest("/blockchain", blockchain::routes())
+        .merge(document::routes())
+        .nest("/signer", signer::routes())
         .nest("/storage", storage::routes())
         .nest("/metrics", metrics::routes())
         .route("/ping", get(ping))

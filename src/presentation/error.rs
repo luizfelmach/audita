@@ -38,4 +38,4 @@ impl From<anyhow::Error> for AppError {
     }
 }
 
-pub type Result<T> = std::result::Result<T, AppError>;
+pub type HttpResult<T> = std::result::Result<T, AppError>;

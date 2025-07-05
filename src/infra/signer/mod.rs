@@ -1,5 +1,5 @@
 mod ethereum;
-mod memory;
+// mod memory;
 
 pub use ethereum::*;
-pub use memory::*;
+// pub use memory::*;

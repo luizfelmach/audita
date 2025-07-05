@@ -6,7 +6,7 @@ mod infra;
 mod presentation;
 mod tasks;
 
-use crate::context::Context;
+use crate::{context::Context, presentation::server};
 
 #[tokio::main]
 async fn main() {
@@ -27,5 +27,10 @@ async fn main() {
     for _ in 0..10 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::storage::run(ctx));
+    }
+
+    match server::run(ctx.clone()).await {
+        Ok(_) => {}
+        Err(_) => {}
     }
 }

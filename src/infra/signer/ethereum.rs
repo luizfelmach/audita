@@ -59,12 +59,6 @@ impl EthereumSignerRepository {
         })
     }
 
-    async fn nonce(&self) -> Result<u64> {
-        let address = self.signer.address();
-        let nonce = self.provider.get_transaction_count(address).await?;
-        Ok(nonce)
-    }
-
     async fn confirm(&self, tx: &[u8; 32]) -> Result<[u8; 32]> {
         let mut interval = tokio::time::interval(Duration::from_millis(500));
         loop {

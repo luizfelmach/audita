@@ -1,5 +1,5 @@
 pub mod elasticsearch;
-pub mod memory;
+// pub mod memory;
 
 pub use elasticsearch::*;
-pub use memory::*;
+// pub use memory::*;

@@ -1,35 +1,31 @@
-use crate::{handlers::ui::serve_ui, routes, state::AppState};
+use crate::context::Context;
+use crate::presentation::handlers::ui::ui;
+use crate::presentation::routes;
+use anyhow::{Ok, Result};
 use axum::Router;
-use std::{process, sync::Arc};
-use tokio::net;
+use std::sync::Arc;
+use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::normalize_path::NormalizePathLayer;
-use tracing::{error, info};
 
-pub async fn server(state: Arc<AppState>) {
-    let url = format!("{}:{}", state.config.host, state.config.port);
-    let bind = net::TcpListener::bind(&url).await;
-
-    let Ok(listener) = bind else {
-        error!("failed to bind to {}: {:?}", url, bind);
-        process::exit(1)
-    };
-
-    let app = create_app((*state).clone());
-
-    match axum::serve(listener, app).await {
-        Ok(_) => info!("server terminated gracefully"),
-        Err(err) => error!("server encountered an error during execution: {:?}", err),
-    }
+pub async fn run(ctx: Arc<Context>) -> Result<()> {
+    let url = url(ctx.config.host.clone(), ctx.config.port);
+    let listener = TcpListener::bind(url).await?;
+    let app = router(ctx.clone());
+    axum::serve(listener, app).await?;
+    Ok(())
 }
 
-fn create_app(state: AppState) -> Router {
+fn router(ctx: Arc<Context>) -> Router {
     let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
-
     Router::new()
         .nest("/api", routes::api())
-        .fallback(serve_ui)
+        .fallback(ui)
         .layer(cors)
         .layer(NormalizePathLayer::trim_trailing_slash())
-        .with_state(state)
+        .with_state((*ctx).clone())
+}
+
+pub fn url(host: String, port: u16) -> String {
+    format!("{}:{}", host, port)
 }
