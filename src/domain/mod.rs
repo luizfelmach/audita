@@ -1,9 +1,11 @@
 mod batch;
 mod document;
-mod repository;
+mod pipeline;
+mod protocols;
 mod search;
 
 pub use batch::*;
 pub use document::*;
-pub use repository::*;
+pub use pipeline::*;
+pub use protocols::*;
 pub use search::*;

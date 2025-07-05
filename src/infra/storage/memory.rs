@@ -1,5 +1,6 @@
 use crate::domain::{Batch, DocumentQuery, Hasher, Query, QueryResult, StorageRepository};
 use anyhow::Result;
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -16,6 +17,7 @@ impl MemoryStorageRepository {
     }
 }
 
+#[async_trait]
 impl StorageRepository for MemoryStorageRepository {
     async fn store(&self, batch: &Batch) -> Result<()> {
         self.store.write().await.insert(batch.id.clone(), batch.clone());

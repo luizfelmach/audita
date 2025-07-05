@@ -5,12 +5,6 @@ use sha2::{Digest, Sha256};
 #[derive(Clone)]
 pub struct Sha256HasherHelper;
 
-impl Sha256HasherHelper {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 impl Hasher for Sha256HasherHelper {
     fn digest(&self, docs: &Vec<Document>) -> Result<[u8; 32]> {
         let mut partial = String::new();

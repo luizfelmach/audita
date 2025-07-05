@@ -1,5 +1,6 @@
 use crate::domain::{Batch, SignerRepository};
 use anyhow::Result;
+use async_trait::async_trait;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 
@@ -14,6 +15,7 @@ impl MemorySignerRepository {
     }
 }
 
+#[async_trait]
 impl SignerRepository for MemorySignerRepository {
     async fn publish(&self, batch: &Batch) -> Result<()> {
         let mut digests = self.digests.write().await;

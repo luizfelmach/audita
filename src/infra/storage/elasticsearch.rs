@@ -1,5 +1,6 @@
 use crate::domain::{Batch, Condition, DocumentQuery, Hasher, Operator, Query, QueryResult, StorageRepository};
 use anyhow::{bail, Ok, Result};
+use async_trait::async_trait;
 use chrono::Local;
 use elasticsearch::{
     auth::Credentials,
@@ -100,6 +101,7 @@ impl ElasticsearchStorageRepository {
     }
 }
 
+#[async_trait]
 impl StorageRepository for ElasticsearchStorageRepository {
     async fn store(&self, batch: &Batch) -> Result<()> {
         let mut ops: Vec<BulkOperation<Map<String, Value>>> = Vec::new();

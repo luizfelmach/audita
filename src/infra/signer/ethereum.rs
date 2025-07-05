@@ -8,6 +8,7 @@ use alloy::{
     sol,
 };
 use anyhow::{bail, Result};
+use async_trait::async_trait;
 use std::{
     sync::{
         atomic::{AtomicU64, Ordering},
@@ -104,6 +105,7 @@ impl EthereumSignerRepository {
     }
 }
 
+#[async_trait]
 impl SignerRepository for EthereumSignerRepository {
     async fn publish(&self, batch: &Batch) -> Result<()> {
         let _permit = self.max_tx_pending.clone().acquire_owned().await?;
