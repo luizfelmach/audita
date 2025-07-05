@@ -1,27 +1,15 @@
-use crate::domain::{Batch, DynStorageRepository, Pipeline};
+use crate::{context::Context, domain::Batch};
 use std::sync::Arc;
 
-#[derive(Clone)]
-pub struct StorageTask {
-    pipeline: Pipeline,
-    repository: DynStorageRepository,
+pub async fn run(ctx: Arc<Context>) {
+    while let Some(batch) = ctx.pipeline.storage.recv().await {
+        send(ctx.clone(), batch).await;
+    }
 }
 
-impl StorageTask {
-    pub fn new(pipeline: Pipeline, repository: DynStorageRepository) -> Self {
-        Self { pipeline, repository }
-    }
-
-    pub async fn run(&self) {
-        while let Some(batch) = self.pipeline.storage.recv().await {
-            self.send(batch).await;
-        }
-    }
-
-    async fn send(&self, batch: Arc<Batch>) {
-        match self.repository.store(&batch).await {
-            Ok(_) => println!("batch completed on storage ({})", batch.id),
-            Err(err) => eprintln!("Failed to submit batch: {:?}", err),
-        }
+async fn send(ctx: Arc<Context>, batch: Arc<Batch>) {
+    match ctx.storage.store(&batch).await {
+        Ok(_) => println!("batch completed on storage ({})", batch.id),
+        Err(err) => eprintln!("Failed to submit batch: {:?}", err),
     }
 }

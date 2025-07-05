@@ -4,13 +4,13 @@ use async_trait::async_trait;
 use std::sync::Arc;
 
 #[async_trait]
-pub trait SignerRepository {
+pub trait SignerRepository: Send + Sync {
     async fn publish(&self, batch: &Batch) -> Result<()>;
     async fn digest(&self, id: &String) -> Result<Option<[u8; 32]>>;
 }
 
 #[async_trait]
-pub trait StorageRepository {
+pub trait StorageRepository: Send + Sync {
     async fn store(&self, batch: &Batch) -> Result<()>;
     async fn retrieve(&self, id: &String) -> Result<Option<Batch>>;
     async fn search(&self, query: &Query) -> Result<QueryResult>;
@@ -26,7 +26,7 @@ pub trait Hasher: Send + Sync {
     fn digest(&self, docs: &Vec<Document>) -> Result<[u8; 32]>;
 }
 
-pub trait UuidGenerator {
+pub trait UuidGenerator: Send + Sync {
     fn generate(&self) -> String;
 }
 

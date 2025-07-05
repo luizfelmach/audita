@@ -1,37 +1,26 @@
-use crate::domain::{Batch, Document, DynHasher, DynUuidGenerator, Pipeline};
+use crate::{
+    context::Context,
+    domain::{Batch, Document},
+};
 use std::sync::Arc;
 
-#[derive(Clone)]
-pub struct WorkerTask {
-    pipeline: Pipeline,
-    hasher: DynHasher,
-    uuid: DynUuidGenerator,
-    batch_size: usize,
-}
+pub async fn run(ctx: Arc<Context>) {
+    let mut buffer = Vec::new();
 
-impl WorkerTask {
-    pub fn new(pipeline: Pipeline, hasher: DynHasher, uuid: DynUuidGenerator, batch_size: usize) -> Self {
-        Self { pipeline, hasher, uuid, batch_size }
-    }
+    while let Some(document) = ctx.pipeline.worker.recv().await {
+        buffer.push(document);
 
-    pub async fn run(&self) {
-        let mut buffer = Vec::new();
-
-        while let Some(document) = self.pipeline.worker.recv().await {
-            buffer.push(document);
-
-            if buffer.len() >= self.batch_size {
-                self.send(&mut buffer).await;
-            }
+        if buffer.len() >= ctx.config.batch_size {
+            send(ctx.clone(), &mut buffer).await;
         }
     }
+}
 
-    async fn send(&self, buffer: &mut Vec<Document>) {
-        let id = self.uuid.generate();
-        let digest = self.hasher.digest(&buffer).unwrap();
-        let batch = Arc::new(Batch { id, documents: std::mem::take(buffer), digest });
+async fn send(ctx: Arc<Context>, buffer: &mut Vec<Document>) {
+    let id = ctx.uuid.generate();
+    let digest = ctx.hasher.digest(&buffer).unwrap();
+    let batch = Arc::new(Batch { id, documents: std::mem::take(buffer), digest });
 
-        self.pipeline.signer.send(batch.clone()).await;
-        self.pipeline.storage.send(batch.clone()).await;
-    }
+    ctx.pipeline.signer.send(batch.clone()).await;
+    ctx.pipeline.storage.send(batch.clone()).await;
 }
