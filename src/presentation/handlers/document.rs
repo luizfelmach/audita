@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct SubmitDocumentRequest(Document);
 
 pub async fn submit_document(State(ctx): State<Context>, Json(payload): Json<SubmitDocumentRequest>) -> HttpResult<()> {
+    ctx.prom.docs_total.inc();
+    ctx.prom.worker_queue_size.inc();
     ctx.pipeline.worker.send(payload.0).await;
     Ok(())
 }
