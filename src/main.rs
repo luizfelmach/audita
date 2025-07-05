@@ -18,12 +18,10 @@ async fn main() {
         let ctx = ctx.clone();
         tokio::spawn(tasks::worker::run(ctx));
     }
-
     for _ in 0..10 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::signer::run(ctx));
     }
-
     for _ in 0..10 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::storage::run(ctx));
