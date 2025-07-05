@@ -7,12 +7,16 @@ mod presentation;
 mod tasks;
 
 use crate::{context::Context, presentation::server};
+use tracing::{debug, error, info};
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
     let ctx = Context::init().unwrap();
+
+    debug!(?ctx.config);
+    info!("Spawning background workers...");
 
     for _ in 0..100 {
         let ctx = ctx.clone();
@@ -27,8 +31,7 @@ async fn main() {
         tokio::spawn(tasks::storage::run(ctx));
     }
 
-    match server::run(ctx.clone()).await {
-        Ok(_) => {}
-        Err(_) => {}
+    if let Err(err) = server::run(ctx.clone()).await {
+        error!("Server failed to start: {}", err);
     }
 }

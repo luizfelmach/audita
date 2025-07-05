@@ -4,6 +4,7 @@ use axum::{
     Json,
 };
 use serde_json::json;
+use tracing::error;
 
 #[derive(Debug)]
 pub enum AppError {
@@ -19,7 +20,10 @@ impl IntoResponse for AppError {
             // AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             // AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg),
-            AppError::Internal(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("Internal server error: {}", err)),
+            AppError::Internal(err) => {
+                error!(error = %err, "Internal server error occurred");
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("Internal server error: {}", err))
+            }
         };
 
         let body = Json(json!({
