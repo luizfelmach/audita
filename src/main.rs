@@ -31,6 +31,7 @@ async fn main() {
         tokio::spawn(tasks::storage::run(ctx));
     }
 
+    info!("Starting HTTP server...");
     if let Err(err) = server::run(ctx.clone()).await {
         error!("Server failed to start: {}", err);
     }
