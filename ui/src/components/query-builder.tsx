@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,7 +36,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryContext } from "@/context/use-query";
 import { useState } from "react";
-import { Condition, OperatorType } from "@/types/search";
+import type { Condition, OperatorType } from "@/types/search";
 
 const operations = {
   string: [
@@ -218,7 +220,8 @@ export function QueryBuilder() {
         ? currentUiState.timeValue2 || "23:59"
         : currentUiState.timeValue || "00:00";
 
-      const dateTimeString = `${format(date, "yyyy-MM-dd")}T${timeValue}`;
+      // Format as ISO 8601 with timezone
+      const dateTimeString = `${format(date, "yyyy-MM-dd")}T${timeValue}:00.000Z`;
 
       if (needsTwoValues(currentCondition.op.type)) {
         const currentArray = Array.isArray(currentCondition.op.value)
@@ -267,7 +270,35 @@ export function QueryBuilder() {
       : currentUiState.dateValue;
 
     if (dateValue) {
-      handleDateChange(index, dateValue, isSecondValue);
+      const currentCondition = conditions[index];
+      if (!currentCondition) return;
+
+      // Format as ISO 8601 with timezone
+      const dateTimeString = `${format(dateValue, "yyyy-MM-dd")}T${time}:00.000Z`;
+
+      if (needsTwoValues(currentCondition.op.type)) {
+        const currentArray = Array.isArray(currentCondition.op.value)
+          ? (currentCondition.op.value as [string, string])
+          : ["", ""];
+
+        const newValue: [string, string] = isSecondValue
+          ? [currentArray[0], dateTimeString]
+          : [dateTimeString, currentArray[1]];
+
+        handleUpdateCondition(index, {
+          op: {
+            ...currentCondition.op,
+            value: newValue,
+          },
+        });
+      } else {
+        handleUpdateCondition(index, {
+          op: {
+            ...currentCondition.op,
+            value: dateTimeString,
+          },
+        });
+      }
     }
   };
 
