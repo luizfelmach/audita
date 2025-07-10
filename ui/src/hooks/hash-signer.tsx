@@ -1,9 +1,24 @@
+import api from "@/services/api";
+import { useQuery } from "@tanstack/react-query";
+
+interface HashSignerResult {
+  id: string;
+  hash: string;
+}
+
+export async function fetchHashSigner(id: string) {
+  const response = await api.get<HashSignerResult>(`/signer/hash/${id}`);
+  return response.data;
+}
+
 export function useHashSigner(id: string) {
-  const hashSignerLoading = false;
-  const hashSigner = "0x123123123";
+  const { data, isLoading } = useQuery({
+    queryKey: ["hashStorage", id],
+    queryFn: () => fetchHashSigner(id),
+  });
 
   return {
-    hashSigner,
-    hashSignerLoading,
+    hashSigner: data?.hash,
+    hashSignerLoading: isLoading,
   };
 }

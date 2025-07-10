@@ -1,9 +1,24 @@
+import api from "@/services/api";
+import { useQuery } from "@tanstack/react-query";
+
+interface HashStorageResult {
+  id: string;
+  hash: string;
+}
+
+export async function fetchHashStorage(id: string) {
+  const response = await api.get<HashStorageResult>(`/storage/hash/${id}`);
+  return response.data;
+}
+
 export function useHashStorage(id: string) {
-  const hashStorage = "0x123123123";
-  const hashStorageLoading = false;
+  const { data, isLoading } = useQuery({
+    queryKey: ["hashStorage", id],
+    queryFn: () => fetchHashStorage(id),
+  });
 
   return {
-    hashStorage,
-    hashStorageLoading,
+    hashStorage: data?.hash,
+    hashStorageLoading: isLoading,
   };
 }
