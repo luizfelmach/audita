@@ -7,6 +7,7 @@ interface HashSignerResult {
 }
 
 export async function fetchHashSigner(id: string) {
+  await new Promise((resolve) => setTimeout(resolve, 7000));
   const response = await api.get<HashSignerResult>(`/signer/hash/${id}`);
   return response.data;
 }
