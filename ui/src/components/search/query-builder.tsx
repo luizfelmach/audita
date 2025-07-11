@@ -469,44 +469,33 @@ export function QueryBuilder({ onSearch, searching }: QueryBuilderProps) {
       {conditions.length > 0 && (
         <Card className="border-border/50 hover:border-border shadow-none">
           <CardContent className="py-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={handleAdd}
-                disabled={searching}
-                className="border-primary/20 text-primary hover:bg-primary/10 bg-transparent disabled:opacity-50"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Condition
-              </Button>
+            <div className="flex flex-wrap justify-between items-start gap-4">
+              <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={handleAdd}
+                  disabled={searching}
+                  className="w-full md:w-auto whitespace-nowrap border-primary/20 text-primary hover:bg-primary/10 bg-transparent disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Condition
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={clearConditions}
+                  disabled={searching}
+                  className="w-full md:w-auto whitespace-nowrap text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear All
+                </Button>
+              </div>
 
-              <Button
-                variant="ghost"
-                onClick={clearConditions}
-                disabled={searching}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-50"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Clear All
-              </Button>
-
-              <div className="flex-1" />
-
-              <div className="flex items-center gap-3">
-                {validConditions.length !== conditions.length && !searching && (
-                  <span className="text-sm text-destructive">
-                    {conditions.length - validConditions.length} incomplete
-                    condition
-                    {conditions.length - validConditions.length !== 1
-                      ? "s"
-                      : ""}
-                  </span>
-                )}
-
+              <div className="w-full md:w-auto">
                 <Button
                   onClick={handleSearch}
                   disabled={validConditions.length === 0 || searching}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-muted disabled:text-muted-foreground"
+                  className="w-full md:w-auto md:flex-1 bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Search className="w-4 h-4 mr-2" />
                   Search{" "}
