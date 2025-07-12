@@ -8,7 +8,6 @@ import { convertToConditions } from "@/lib/condition";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Database, Clock, CheckCircle } from "lucide-react";
 
 export function Search() {
@@ -108,11 +107,11 @@ export function Search() {
         <div className="space-y-6">
           {/* Results Header */}
           <Card className="border-border/50 shadow-none bg-green-50/50 dark:bg-green-950/20">
-            <CardHeader className="pb-3">
+            <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-600" />
-                  Search Results
+                  Search results
                 </CardTitle>
                 <Badge
                   variant="default"
@@ -123,8 +122,7 @@ export function Search() {
                 </Badge>
               </div>
             </CardHeader>
-            <Separator />
-            <CardContent className="pt-3">
+            <CardContent>
               <p className="text-sm text-muted-foreground">
                 Found {results.length} document{results.length !== 1 ? "s" : ""}{" "}
                 matching your search criteria with {lastSearchConditions.length}{" "}

@@ -230,7 +230,7 @@ export function QueryBuilder({ onSearch, searching }: QueryBuilderProps) {
               <div key={index} className="space-y-3">
                 {/* Condition Row */}
                 <Card className="border-border/50 shadow-none bg-card hover:border-border transition-colors">
-                  <CardContent className="p-4">
+                  <CardContent className="px-4">
                     <div className="space-y-4">
                       {/* Header with icon and delete */}
                       <div className="flex items-center justify-between">
