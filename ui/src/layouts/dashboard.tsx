@@ -11,7 +11,9 @@ export function Dashboard() {
       <SidebarInset>
         <SiteHeader />
         <Separator />
-        <Outlet />
+        <div className="p-6">
+          <Outlet />
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

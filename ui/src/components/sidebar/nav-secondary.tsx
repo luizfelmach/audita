@@ -1,36 +1,32 @@
+import * as React from "react";
 import {
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import type { LucideIcon } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-export function NavMain({
+export function NavSecondary({
   items,
+  ...props
 }: {
   items: {
     title: string;
     url: string;
     icon: LucideIcon;
   }[];
-}) {
-  const location = useLocation();
+} & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Auditing</SidebarGroupLabel>
+    <SidebarGroup {...props}>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <Link to={item.url}>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  isActive={location.pathname == item.url}
-                >
+                <SidebarMenuButton tooltip={item.title}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </SidebarMenuButton>

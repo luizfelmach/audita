@@ -13,7 +13,7 @@ export function Search() {
   };
 
   return (
-    <div className="p-6 space-y-10">
+    <div className="space-y-10">
       <QueryBuilder searching={isPending} onSearch={handleSearch} />
 
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
