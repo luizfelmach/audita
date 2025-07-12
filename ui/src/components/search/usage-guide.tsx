@@ -1,55 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Search,
-  Plus,
-  Filter,
-  Hash,
-  Calendar,
-  Type,
-  BookOpen,
-  Lightbulb,
-  Target,
-} from "lucide-react";
+import { Search, Plus, Filter, BookOpen, Target } from "lucide-react";
 
 export function UsageGuide() {
-  const operatorExamples = [
-    {
-      category: "String Operations",
-      icon: Type,
-      color: "bg-blue-100 text-blue-800 border-blue-200",
-      examples: [
-        { operator: "Equals to", example: 'username = "john_doe"' },
-        { operator: "Contains", example: 'email contains "@gmail.com"' },
-        { operator: "Starts with", example: 'name starts with "Admin"' },
-        { operator: "Regex", example: 'phone matches "^\\+55"' },
-      ],
-    },
-    {
-      category: "Number Operations",
-      icon: Hash,
-      color: "bg-green-100 text-green-800 border-green-200",
-      examples: [
-        { operator: "Equals to", example: "age = 25" },
-        { operator: "Greater than", example: "score > 100" },
-        { operator: "Between", example: "price between 10 and 50" },
-        { operator: "Less than", example: "attempts < 3" },
-      ],
-    },
-    {
-      category: "Date Operations",
-      icon: Calendar,
-      color: "bg-purple-100 text-purple-800 border-purple-200",
-      examples: [
-        { operator: "After", example: 'created_at after "2024-01-01"' },
-        { operator: "Before", example: 'updated_at before "2024-12-31"' },
-        { operator: "Between", example: "login_date between dates" },
-        { operator: "Equals to", example: 'birth_date = "1990-05-15"' },
-      ],
-    },
-  ];
-
   const steps = [
     {
       step: 1,
@@ -128,49 +80,6 @@ export function UsageGuide() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Operator Examples */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-foreground">
-            Available Operators
-          </h3>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {operatorExamples.map((category) => (
-            <Card
-              key={category.category}
-              className="border-border/50 shadow-none"
-            >
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <category.icon className="w-4 h-4" />
-                  {category.category}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {category.examples.map((example, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className={category.color}>
-                        {example.operator}
-                      </Badge>
-                    </div>
-                    <code className="block text-xs font-mono bg-muted/50 border border-border px-2 py-1.5 rounded text-foreground">
-                      {example.example}
-                    </code>
-                    {index < category.examples.length - 1 && (
-                      <Separator className="my-2" />
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

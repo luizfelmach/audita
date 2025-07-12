@@ -261,7 +261,7 @@ export function QueryBuilder({ onSearch, searching }: QueryBuilderProps) {
                             Field Key
                           </label>
                           <Input
-                            placeholder="Ex: message, user_id, timestamp"
+                            placeholder="message, id, timestamp, ip, port"
                             value={condition.field}
                             disabled={searching}
                             onChange={(e) =>
@@ -375,7 +375,7 @@ export function QueryBuilder({ onSearch, searching }: QueryBuilderProps) {
                             {isBetween(condition.type) && (
                               <div className="space-y-1">
                                 <span className="text-xs text-muted-foreground">
-                                  End Value
+                                  END VALUE
                                 </span>
                                 {isDateOperation(condition.type) ? (
                                   <DateTimeInput
