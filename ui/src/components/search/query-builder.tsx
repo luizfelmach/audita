@@ -13,14 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -220,208 +212,36 @@ export function QueryBuilder({ onSearch, searching }: QueryBuilderProps) {
         )}
       </div>
 
-      {/* Conditions Table */}
+      {/* Conditions List */}
       {conditions.length > 0 ? (
         <div
           className={cn(
-            "rounded-lg border border-border/50 shadow-none bg-card transition-opacity",
+            "space-y-4 transition-opacity",
             searching && "opacity-75",
           )}
         >
-          <div className="overflow-x-auto">
-            <Table className="mb-4">
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-16">#</TableHead>
-                  <TableHead className="min-w-[200px]">Field Name</TableHead>
-                  <TableHead className="min-w-[180px]">Operator</TableHead>
-                  <TableHead className="min-w-[200px]">Value</TableHead>
-                  <TableHead className="min-w-[200px]">End Value</TableHead>
-                  <TableHead className="min-w-[250px]">Preview</TableHead>
-                  <TableHead className="w-16">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {conditions.map((condition, index) => {
-                  const FieldIcon = getFieldIcon(condition.type);
-                  const operatorInfo = allOperators.find(
-                    (op) => op.type === condition.type,
-                  );
+          {conditions.map((condition, index) => {
+            const FieldIcon = getFieldIcon(condition.type);
+            const operatorInfo = allOperators.find(
+              (op) => op.type === condition.type,
+            );
 
-                  return (
-                    <TableRow key={index} className="hover:bg-muted/30">
-                      {/* Index */}
-                      <TableCell>
-                        <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 border border-primary/20">
-                          <FieldIcon className="w-4 h-4 text-primary" />
-                        </div>
-                      </TableCell>
-
-                      {/* Field Name */}
-                      <TableCell>
-                        <Input
-                          placeholder="e.g., username, email, created_at"
-                          value={condition.field}
-                          disabled={searching}
-                          onChange={(e) =>
-                            updateCondition(index, { field: e.target.value })
-                          }
-                          className="font-mono text-sm h-9"
-                        />
-                      </TableCell>
-
-                      {/* Operator */}
-                      <TableCell>
-                        <Select
-                          value={condition.type}
-                          disabled={searching}
-                          onValueChange={(value) =>
-                            updateCondition(index, {
-                              type: value as ConditionHook["type"],
-                            })
-                          }
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Select operator" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectLabel className="flex items-center gap-2">
-                                <Type className="w-3.5 h-3.5" />
-                                String Operations
-                              </SelectLabel>
-                              {operators.string.map((op) => (
-                                <SelectItem key={op.type} value={op.type}>
-                                  <div className="flex items-center gap-2">
-                                    <op.icon className="w-3.5 h-3.5" />
-                                    {op.label}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-
-                            <SelectGroup>
-                              <SelectLabel className="flex items-center gap-2">
-                                <Hash className="w-3.5 h-3.5" />
-                                Number Operations
-                              </SelectLabel>
-                              {operators.number.map((op) => (
-                                <SelectItem key={op.type} value={op.type}>
-                                  <div className="flex items-center gap-2">
-                                    <op.icon className="w-3.5 h-3.5" />
-                                    {op.label}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-
-                            <SelectGroup>
-                              <SelectLabel className="flex items-center gap-2">
-                                <CalendarIcon className="w-3.5 h-3.5" />
-                                Date Operations
-                              </SelectLabel>
-                              {operators.date.map((op) => (
-                                <SelectItem key={op.type} value={op.type}>
-                                  <div className="flex items-center gap-2">
-                                    <op.icon className="w-3.5 h-3.5" />
-                                    {op.label}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Value 1 */}
-                      <TableCell>
-                        {isDateOperation(condition.type) ? (
-                          <DateTimeInput
-                            value={condition.value1}
-                            onChange={(date, time) =>
-                              handleDateTimeChange(index, "value1", date, time)
-                            }
-                            placeholder="Select start date"
-                          />
-                        ) : (
-                          <div className="relative">
-                            <Input
-                              placeholder="Enter value"
-                              value={condition.value1}
-                              disabled={searching}
-                              onChange={(e) =>
-                                updateCondition(index, {
-                                  value1: e.target.value,
-                                })
-                              }
-                              className="font-mono text-sm h-9 pr-8"
-                            />
+            return (
+              <div key={index} className="space-y-3">
+                {/* Condition Row */}
+                <Card className="border-border/50 shadow-none bg-card hover:border-border transition-colors">
+                  <CardContent className="p-4">
+                    <div className="space-y-4">
+                      {/* Header with icon and delete */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 border border-primary/20">
+                            <FieldIcon className="w-4 h-4 text-primary" />
                           </div>
-                        )}
-                      </TableCell>
-
-                      {/* Value 2 (Between operations) */}
-                      <TableCell>
-                        {isBetween(condition.type) ? (
-                          isDateOperation(condition.type) ? (
-                            <DateTimeInput
-                              value={condition.value2}
-                              onChange={(date, time) =>
-                                handleDateTimeChange(
-                                  index,
-                                  "value2",
-                                  date,
-                                  time,
-                                )
-                              }
-                              placeholder="Select end date"
-                            />
-                          ) : (
-                            <div className="relative">
-                              <Input
-                                placeholder="Enter end value"
-                                value={condition.value2}
-                                disabled={searching}
-                                onChange={(e) =>
-                                  updateCondition(index, {
-                                    value2: e.target.value,
-                                  })
-                                }
-                                className="font-mono text-sm h-9 pr-8"
-                              />
-                            </div>
-                          )
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            —
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Condition {index + 1}
                           </span>
-                        )}
-                      </TableCell>
-
-                      {/* Preview */}
-                      <TableCell>
-                        {condition.field && condition.value1 ? (
-                          <code className="bg-muted border border-border px-2 py-1 rounded text-foreground font-mono text-xs">
-                            {condition.field}{" "}
-                            {operatorInfo?.label.toLowerCase()}{" "}
-                            {isDateOperation(condition.type) && condition.value1
-                              ? `"${format(new Date(condition.value1), "MMM dd, yyyy HH:mm")}"`
-                              : `"${condition.value1}"`}
-                            {isBetween(condition.type) &&
-                              condition.value2 &&
-                              (isDateOperation(condition.type)
-                                ? ` and "${format(new Date(condition.value2), "MMM dd, yyyy HH:mm")}"`
-                                : ` and "${condition.value2}"`)}
-                          </code>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            Incomplete
-                          </span>
-                        )}
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell>
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -431,13 +251,205 @@ export function QueryBuilder({ onSearch, searching }: QueryBuilderProps) {
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                      </div>
+
+                      {/* Fields Grid */}
+                      <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
+                        {/* Field Key */}
+                        <div className="lg:col-span-4 space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Field Key
+                          </label>
+                          <Input
+                            placeholder="Ex: message, user_id, timestamp"
+                            value={condition.field}
+                            disabled={searching}
+                            onChange={(e) =>
+                              updateCondition(index, { field: e.target.value })
+                            }
+                            className="font-mono text-sm h-9"
+                          />
+                        </div>
+
+                        {/* Operation */}
+                        <div className="lg:col-span-3 space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Operation
+                          </label>
+                          <Select
+                            value={condition.type}
+                            disabled={searching}
+                            onValueChange={(value) =>
+                              updateCondition(index, {
+                                type: value as ConditionHook["type"],
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Select operator" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel className="flex items-center gap-2">
+                                  <Type className="w-3.5 h-3.5" />
+                                  String Operations
+                                </SelectLabel>
+                                {operators.string.map((op) => (
+                                  <SelectItem key={op.type} value={op.type}>
+                                    <div className="flex items-center gap-2">
+                                      <op.icon className="w-3.5 h-3.5" />
+                                      {op.label}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+
+                              <SelectGroup>
+                                <SelectLabel className="flex items-center gap-2">
+                                  <Hash className="w-3.5 h-3.5" />
+                                  Number Operations
+                                </SelectLabel>
+                                {operators.number.map((op) => (
+                                  <SelectItem key={op.type} value={op.type}>
+                                    <div className="flex items-center gap-2">
+                                      <op.icon className="w-3.5 h-3.5" />
+                                      {op.label}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+
+                              <SelectGroup>
+                                <SelectLabel className="flex items-center gap-2">
+                                  <CalendarIcon className="w-3.5 h-3.5" />
+                                  Date Operations
+                                </SelectLabel>
+                                {operators.date.map((op) => (
+                                  <SelectItem key={op.type} value={op.type}>
+                                    <div className="flex items-center gap-2">
+                                      <op.icon className="w-3.5 h-3.5" />
+                                      {op.label}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Value */}
+                        <div className="lg:col-span-5 space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Value
+                          </label>
+                          <div className="space-y-2">
+                            {/* First Value */}
+                            {isDateOperation(condition.type) ? (
+                              <DateTimeInput
+                                value={condition.value1}
+                                onChange={(date, time) =>
+                                  handleDateTimeChange(
+                                    index,
+                                    "value1",
+                                    date,
+                                    time,
+                                  )
+                                }
+                                placeholder="Select start date"
+                              />
+                            ) : (
+                              <Input
+                                placeholder="Enter value"
+                                value={condition.value1}
+                                disabled={searching}
+                                onChange={(e) =>
+                                  updateCondition(index, {
+                                    value1: e.target.value,
+                                  })
+                                }
+                                className="font-mono text-sm h-9"
+                              />
+                            )}
+
+                            {/* Second Value (for Between operations) */}
+                            {isBetween(condition.type) && (
+                              <div className="space-y-1">
+                                <span className="text-xs text-muted-foreground">
+                                  End Value
+                                </span>
+                                {isDateOperation(condition.type) ? (
+                                  <DateTimeInput
+                                    value={condition.value2}
+                                    onChange={(date, time) =>
+                                      handleDateTimeChange(
+                                        index,
+                                        "value2",
+                                        date,
+                                        time,
+                                      )
+                                    }
+                                    placeholder="Select end date"
+                                  />
+                                ) : (
+                                  <Input
+                                    placeholder="Enter end value"
+                                    value={condition.value2}
+                                    disabled={searching}
+                                    onChange={(e) =>
+                                      updateCondition(index, {
+                                        value2: e.target.value,
+                                      })
+                                    }
+                                    className="font-mono text-sm h-9"
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preview */}
+                      {condition.field && condition.value1 && (
+                        <div className="pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                              Preview:
+                            </span>
+                            <code className="bg-muted border border-border px-2 py-1 rounded text-foreground font-mono text-xs">
+                              {condition.field}{" "}
+                              {operatorInfo?.label.toLowerCase()}{" "}
+                              {isDateOperation(condition.type) &&
+                              condition.value1
+                                ? `"${format(new Date(condition.value1), "MMM dd, yyyy HH:mm")}"`
+                                : `"${condition.value1}"`}
+                              {isBetween(condition.type) &&
+                                condition.value2 &&
+                                (isDateOperation(condition.type)
+                                  ? ` and "${format(new Date(condition.value2), "MMM dd, yyyy HH:mm")}"`
+                                  : ` and "${condition.value2}"`)}
+                            </code>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* AND Connector */}
+                {index < conditions.length - 1 && (
+                  <div className="flex justify-center">
+                    <Badge
+                      variant="outline"
+                      className="bg-background text-muted-foreground border-border px-3 py-1"
+                    >
+                      AND
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         /* Empty State */
