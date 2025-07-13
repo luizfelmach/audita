@@ -1,46 +1,28 @@
 import * as React from "react";
-import { IconShieldCheck } from "@tabler/icons-react";
-import { NavMain } from "@/components/sidebar/nav-main";
-import { NavSecondary } from "@/components/sidebar/nav-secondary";
+import { NavMain } from "./nav-main";
+import { AppSidebarHeader } from "./app-sidebar-header";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router-dom";
-import { NAV } from "./const";
+import { NavSecondary } from "./nav-secondary";
+import { nav } from "./constants";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <Link to="/">
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-blue-600 text-white">
-                    <IconShieldCheck className="size-5 text-white" />
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold text-blue-900">Audita</span>
-                  </div>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <AppSidebarHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={NAV.navMain} />
-        <NavSecondary items={NAV.navSecondary} className="mt-auto" />
+        <NavMain items={nav.navMain} />
+        <NavSecondary items={nav.navSecondary} className="mt-auto" />
       </SidebarContent>
+      <SidebarFooter></SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

@@ -6,10 +6,9 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
-    "verbatimModuleSyntax": false,
     "paths": {
       "@/*": ["./src/*"]
     }
-  },
-  "exclude": ["src/components/ui"]
+  }
+
 }
