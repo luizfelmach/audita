@@ -1,8 +1,4 @@
-"use client";
-
 import * as React from "react";
-import { type Icon } from "@tabler/icons-react";
-
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -10,6 +6,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import type { LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function NavSecondary({
   items,
@@ -18,21 +16,21 @@ export function NavSecondary({
   items: {
     title: string;
     url: string;
-    icon: Icon;
+    icon: LucideIcon;
   }[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
-      <SidebarGroupContent>
+      <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
-                <a href={item.url}>
-                  <item.icon />
+              <Link to={item.url}>
+                <SidebarMenuButton tooltip={item.title}>
+                  {item.icon && <item.icon />}
                   <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
