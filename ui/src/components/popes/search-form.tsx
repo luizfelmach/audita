@@ -55,7 +55,7 @@ export function SearchForm({ onSearch, searching }: SearchFormProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Fingerprint className="w-5 h-5 text-primary" />
-          Pop ES - Firewall Search
+          Pop ES
         </CardTitle>
       </CardHeader>
       <CardContent>
