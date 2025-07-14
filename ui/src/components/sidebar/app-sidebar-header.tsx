@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -16,7 +15,11 @@ export function AppSidebarHeader() {
         >
           <Link to="/">
             <div className="flex items-center gap-2 cursor-pointer">
-              <ShieldCheck className="size-5 text-primary" />
+              <img
+                src="/icon.svg" // Caminho para o arquivo no diretório public
+                alt="Ícone Audita"
+                className="size-6" // Defina o tamanho do ícone
+              />
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold text-secondary-foreground">
                   Audita
