@@ -11,7 +11,6 @@ interface SearchStorageParams {
 }
 
 export async function fetchSearch(payload: SearchStorageParams) {
-  await new Promise((resolve) => setTimeout(resolve, 7000));
   const response = await api.post<SearchStorageResult>(
     `/storage/search`,
     payload,
