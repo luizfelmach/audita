@@ -48,6 +48,13 @@ export function useFirewallSearch() {
       const response = await api.post<SearchResult>("/storage/search", {
         query,
       });
+
+      response.data.docs.sort((a, b) => {
+        const timeA = new Date(a.source?.["@timestamp"] as string).getTime();
+        const timeB = new Date(b.source?.["@timestamp"] as string).getTime();
+        return timeA - timeB;
+      });
+
       return response.data;
     },
   });
@@ -92,6 +99,13 @@ export function useDhcpSearch() {
       const response = await api.post<SearchResult>("/storage/search", {
         query,
       });
+
+      response.data.docs.sort((a, b) => {
+        const timeA = new Date(a.source?.["@timestamp"] as string).getTime();
+        const timeB = new Date(b.source?.["@timestamp"] as string).getTime();
+        return timeA - timeB;
+      });
+
       return response.data;
     },
   });
@@ -139,6 +153,13 @@ export function useRadiusSearch() {
       const response = await api.post<SearchResult>("/storage/search", {
         query,
       });
+
+      response.data.docs.sort((a, b) => {
+        const timeA = new Date(a.source?.["@timestamp"] as string).getTime();
+        const timeB = new Date(b.source?.["@timestamp"] as string).getTime();
+        return timeA - timeB;
+      });
+
       return response.data;
     },
   });
