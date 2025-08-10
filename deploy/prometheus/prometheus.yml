@@ -1,26 +1,26 @@
 global:
-  scrape_interval: 500ms
+  scrape_interval: 1s
 
 scrape_configs:
   - job_name: "besu"
-    scrape_interval: 500ms
-    scrape_timeout: 500ms
+    scrape_interval: 1s
+    scrape_timeout: 1s
     metrics_path: /metrics
     scheme: http
     static_configs:
       - targets: ["localhost:9545"]
 
   - job_name: "audita"
-    scrape_interval: 500ms
-    scrape_timeout: 500ms
+    scrape_interval: 1s
+    scrape_timeout: 1s
     metrics_path: /api/metrics
     scheme: http
     static_configs:
       - targets: ["localhost:8080"]
 
   - job_name: "nodeexporter"
-    scrape_interval: 500ms
-    scrape_timeout: 500ms
+    scrape_interval: 1s
+    scrape_timeout: 1s
     metrics_path: /metrics
     scheme: http
     static_configs:
