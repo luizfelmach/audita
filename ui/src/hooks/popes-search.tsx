@@ -61,14 +61,26 @@ export function useFirewallSearch() {
 // Hook para busca no DHCP
 export function useDhcpSearch() {
   const mutation = useMutation({
-    mutationFn: async (params: {
-      dst_ip: string; // Apenas dst_ip será usado, campo no DHCP é "ip"
-    }) => {
+    mutationFn: async (params: { dst_ip: string; timestamp: string }) => {
+      const startTime = new Date(params.timestamp);
+      const endTime = new Date(params.timestamp);
+
+      // 2 horas antes e depois
+      startTime.setHours(startTime.getHours() - 2);
+      endTime.setHours(endTime.getHours() + 2);
+
       const query: Query = {
         and: [
           {
             field: "ip", // Campo no DHCP é "ip", não "dst_ip"
             op: { type: "EqString", value: params.dst_ip },
+          },
+          {
+            field: "@timestamp",
+            op: {
+              type: "BetweenDate",
+              value: [startTime.toISOString(), endTime.toISOString()],
+            },
           },
           {
             field: "type",
@@ -93,15 +105,29 @@ export function useDhcpSearch() {
 // Hook para busca no Radius
 export function useRadiusSearch() {
   const mutation = useMutation({
-    mutationFn: async (params: { mac: string }) => {
+    mutationFn: async (params: { mac: string; timestamp: string }) => {
       // Formatar MAC: substituir ":" por "-"
       const formattedMac = params.mac.replace(/:/g, "-");
+
+      const startTime = new Date(params.timestamp);
+      const endTime = new Date(params.timestamp);
+
+      // 2 horas antes e depois
+      startTime.setHours(startTime.getHours() - 2);
+      endTime.setHours(endTime.getHours() + 2);
 
       const query: Query = {
         and: [
           {
             field: "mac",
             op: { type: "EqString", value: formattedMac },
+          },
+          {
+            field: "@timestamp",
+            op: {
+              type: "BetweenDate",
+              value: [startTime.toISOString(), endTime.toISOString()],
+            },
           },
           {
             field: "type",

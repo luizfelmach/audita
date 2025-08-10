@@ -52,11 +52,12 @@ export function Popes() {
 
     // Apenas dst_ip será usado para buscar no DHCP
     const dst_ip = doc.source.dst_ip as string;
+    const timestamp = doc.source["@timestamp"] as string;
 
     console.log("Firewall selected:", { dst_ip });
 
     if (dst_ip) {
-      dhcpSearch.searchDhcp({ dst_ip });
+      dhcpSearch.searchDhcp({ dst_ip, timestamp });
     }
   };
 
@@ -67,11 +68,12 @@ export function Popes() {
 
     // Extract MAC address from selected document
     const mac = doc.source.mac as string;
+    const timestamp = doc.source["@timestamp"] as string;
 
     console.log("DHCP selected:", { mac });
 
     if (mac) {
-      radiusSearch.searchRadius({ mac });
+      radiusSearch.searchRadius({ mac, timestamp });
     }
   };
 
@@ -85,8 +87,9 @@ export function Popes() {
   const handleRetryDhcp = () => {
     if (selectedFirewallDoc) {
       const dst_ip = selectedFirewallDoc.source.dst_ip as string;
+      const timestamp = selectedFirewallDoc.source["@timestamp"] as string;
       if (dst_ip) {
-        dhcpSearch.searchDhcp({ dst_ip });
+        dhcpSearch.searchDhcp({ dst_ip, timestamp });
       }
     }
   };
@@ -94,8 +97,9 @@ export function Popes() {
   const handleRetryRadius = () => {
     if (selectedDhcpDoc) {
       const mac = selectedDhcpDoc.source.mac as string;
+      const timestamp = selectedDhcpDoc.source["@timestamp"] as string;
       if (mac) {
-        radiusSearch.searchRadius({ mac });
+        radiusSearch.searchRadius({ mac, timestamp });
       }
     }
   };
