@@ -97,7 +97,7 @@ export function AutoDetectResults({ data, isPending }: AutoDetectResultsProps) {
       <div className="flex items-start justify-center gap-4">
         {steps.map((step, index) => (
           <div key={step.title} className="flex items-center gap-4 w-full max-w-sm">
-            <StepCard {...step} />
+            <StepCard {...step} status={step.status as "completed" | "failed" | "skipped" | "pending"} />
             {index < steps.length - 1 && (
               <ArrowRight className="w-6 h-6 text-gray-300 shrink-0 mt-9" />
             )}

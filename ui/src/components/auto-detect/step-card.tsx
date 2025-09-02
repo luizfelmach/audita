@@ -54,8 +54,8 @@ const truncate = (hash: string, length = 8) => {
 };
 
 export function StepCard({ id, title, icon: Icon, data, status, fields }: StepCardProps) {
-  const { hashSigner, hashSignerLoading } = useHashSigner(id);
-  const { hashStorage, hashStorageLoading } = useHashStorage(id);
+  const { hashSigner, hashSignerLoading } = useHashSigner(id as string);
+  const { hashStorage, hashStorageLoading } = useHashStorage(id as string);
 
   const { copied: copiedSource, copy: copySource } = useCopy();
   const { copied: copiedHashSigner, copy: copyHashSigner } = useCopy();
