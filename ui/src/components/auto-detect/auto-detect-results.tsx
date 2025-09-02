@@ -42,6 +42,7 @@ export function AutoDetectResults({ data, isPending }: AutoDetectResultsProps) {
 
   const steps = [
     {
+      id: firewall?.id,
       title: "Firewall",
       icon: Shield,
       data: firewall?.source ?? null,
@@ -52,6 +53,7 @@ export function AutoDetectResults({ data, isPending }: AutoDetectResultsProps) {
       ],
     },
     {
+      id: dhcp?.id,
       title: "DHCP",
       icon: Wifi,
       data: dhcp?.source ?? null,
@@ -62,6 +64,7 @@ export function AutoDetectResults({ data, isPending }: AutoDetectResultsProps) {
       ],
     },
     {
+      id: radius?.id,
       title: "Radius",
       icon: Radio,
       data: radius?.source ?? null,
