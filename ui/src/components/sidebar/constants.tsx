@@ -1,4 +1,4 @@
-import { Activity, Fingerprint, Info, Search, Settings } from "lucide-react";
+import { Activity, Fingerprint, Info, Search, Settings, User } from "lucide-react";
 
 export const nav = {
   navMain: [
@@ -16,6 +16,11 @@ export const nav = {
       title: "Pop ES",
       url: "/popes",
       icon: Fingerprint,
+    },
+    {
+      title: "Auto Detect",
+      url: "/auto-detect",
+      icon: User,
     },
   ],
 
