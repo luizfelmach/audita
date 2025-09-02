@@ -4,7 +4,7 @@ import { useAutoDetectSearch } from "@/hooks/auto-detect";
 
 export function AutoDetect() {
 
-    const { autoDetect, data } = useAutoDetectSearch();
+    const { autoDetect, data, isPending,  } = useAutoDetectSearch();
 
     const handleSearch = (params: {
         dst_mapped_ip: string;
