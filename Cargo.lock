@@ -975,7 +975,7 @@ dependencies = [
 
 [[package]]
 name = "audita"
-version = "0.2.3"
+version = "0.2.8"
 dependencies = [
  "alloy",
  "anyhow",
