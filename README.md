@@ -30,7 +30,6 @@
   - [Verificação de Integridade](#verificação-de-integridade)
 - [🔌 Integração com Coletores de Logs](#-integração-com-coletores-de-logs)
 - [📊 Monitoramento com Prometheus (Bonus)](#-monitoramento-com-prometheus-bonus)
-- [🙏 Agradecimentos](#-agradecimentos)
 
 ## 🔍 Como Funciona
 
@@ -484,16 +483,6 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 ```
 
-## 🙏 Agradecimentos
-
-Agradecemos a todos que contribuíram para o desenvolvimento do Audita:
-
-- **Comunidade Rust** - Pela linguagem robusta e ecosystem incrível
-- **Ethereum Foundation** - Pela infraestrutura blockchain que torna a verificação imutável possível
-- **Elastic** - Pelo Elasticsearch que permite buscas rápidas e eficientes
-- **Prometheus Team** - Pelas métricas que tornam o monitoramento simples e eficaz
-- **Contribuidores Open Source** - Por relatórios de bugs, sugestões e pull requests
-
 ### Contribuindo
 
 Contribuições são bem-vindas! Por favor:
@@ -503,17 +492,3 @@ Contribuições são bem-vindas! Por favor:
 3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
 4. Push para a branch (`git push origin feature/nova-funcionalidade`)
 5. Abra um Pull Request
-
-### Licença
-
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-### Suporte
-
-- 📧 Email: suporte@audita-project.com
-- 🐛 Issues: [GitHub Issues](https://github.com/luizfelmach/audita/issues)
-- 💬 Discussões: [GitHub Discussions](https://github.com/luizfelmach/audita/discussions)
-
----
-
-**Audita** - Garantindo integridade e rastreabilidade em acessos de rede 🔐
