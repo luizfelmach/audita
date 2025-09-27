@@ -30,7 +30,6 @@
   - [Identificando Quem Estava Logado](#identificando-quem-estava-logado)
   - [Verificação de Integridade](#verificação-de-integridade)
 - [🔌 Integração com Coletores de Logs](#-integração-com-coletores-de-logs)
-- [📊 Monitoramento com Prometheus (Bonus)](#-monitoramento-com-prometheus-bonus)
 
 ## 🔍 Como Funciona
 
@@ -292,136 +291,74 @@ curl -X POST http://localhost:8080/api \
 
 Para identificar quem estava usando um IP específico em determinado momento, acesse o site http://localhost:8080/auto-detect.
 
+<p align="center"> <img src="assets/searching.png" alt="Arquitetura de integração de logs" width="700"/> </p>
 
+
+E após realizar a busca, terá o resultado das inserções.
+
+<p align="center"> <img src="assets/result.png" alt="Arquitetura de integração de logs" width="700"/> </p>
 
 
 ## 🔌 Integração com Coletores de Logs
 
-### Fluentd
 
-Configure o Fluentd para enviar logs diretamente ao Audita:
+O auditalogs é bem extensível, ou seja, você pode usar o coletor de logs de sua preferência. Para isso, basta utilizar configurar que a saída do logs vai ser a chamada HTTP em /api para o correto funcionamento.
 
-```xml
-<match audita.**>
-  @type http
-  endpoint http://localhost:8080/api/v1/logs/batch
-  http_method post
-  headers {"Content-Type": "application/json"}
-  format json
-  <buffer>
-    @type file
-    path /var/log/fluentd-buffers/audita
-    flush_mode interval
-    flush_interval 30s
-    chunk_limit_size 1MB
-  </buffer>
-</match>
+Aqui é um exemplo de configuração com arquitetura utilizando Logstash para coleta de logs:
+
+<p align="center"> <img src="assets/arch.png" alt="Arquitetura de integração de logs" width="700"/> </p>
+
+
+Para coleta de LOGS, basta configurar a saída do Logstash para a aplicação, como no exemplo:
+
 ```
+input {
+  # Exemplo: lendo de um arquivo
+  file {
+    path => "/var/log/meu_app.log"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+  }
+  
+  # Exemplo: lendo do stdin (para testes)
+  # stdin { }
+}
 
-### Logstash
+filter {
+  # Exemplo: parse de JSON caso o log esteja em JSON
+  json {
+    source => "message"
+    remove_field => ["message"]
+  }
+}
 
-Pipeline do Logstash para o Audita:
-
-```ruby
 output {
   http {
-    url => "http://localhost:8080/api/v1/logs/batch"
+    # URL da sua aplicação
+    url => "http://localhost:3000/api"
+
+    # Método HTTP
     http_method => "post"
-    content_type => "application/json"
+
+    # Content-Type
     format => "json"
-    mapping => {
-      "logs" => [
-        {
-          "timestamp" => "%{@timestamp}"
-          "source" => "%{source}"
-          "level" => "%{level}"
-          "message" => "%{message}"
-          "metadata" => "%{metadata}"
-        }
-      ]
+
+    # Campos que serão enviados
+    headers => {
+      "Content-Type" => "application/json"
     }
+
+    # Transformação opcional dos dados
+    # body => '{"log": "%{[@metadata][log]}"}'
+  }
+
+  # Para depuração, também podemos logar no stdout
+  stdout {
+    codec => rubydebug
   }
 }
 ```
 
-### rsyslog
-
-Configure o rsyslog para enviar logs via HTTP:
-
-```
-# /etc/rsyslog.conf
-*.* @@localhost:8080/api/v1/logs
-
-# Template para formato JSON
-$template AuditaFormat,"{\"timestamp\":\"%timereported:::date-rfc3339%\",\"source\":\"syslog\",\"level\":\"%syslogseverity-text%\",\"message\":\"%msg%\",\"metadata\":{\"host\":\"%hostname%\",\"facility\":\"%syslogfacility-text%\"}}\n"
-
-*.* @@localhost:8080/api/v1/logs;AuditaFormat
-```
-
-## 📊 Monitoramento com Prometheus (Bonus)
-
-### Configurando Métricas
-
-O Audita expõe métricas no endpoint `/metrics` para o Prometheus:
-
-```yaml
-# prometheus.yml
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: 'audita'
-    static_configs:
-      - targets: ['localhost:8080']
-    metrics_path: /metrics
-    scrape_interval: 10s
-```
-
-### Principais Métricas Disponíveis
-
-- `audita_logs_processed_total`: Total de logs processados
-- `audita_blockchain_transactions_total`: Transações enviadas à blockchain
-- `audita_correlation_requests_total`: Solicitações de correlação de usuário
-- `audita_integrity_checks_total`: Verificações de integridade realizadas
-- `audita_elasticsearch_indexing_duration`: Tempo de indexação no Elasticsearch
-- `audita_queue_size`: Tamanho atual da fila de processamento
-
-### Dashboard Grafana
-
-Crie dashboards para visualizar:
-
-1. **Volume de Logs**: Logs recebidos por fonte (firewall, DHCP, RADIUS)
-2. **Performance**: Latência de processamento e indexação
-3. **Integridade**: Status das verificações blockchain
-4. **Correlações**: Número de consultas de identificação de usuário
-5. **Alerts**: Falhas de integridade ou problemas de conectividade
-
-### Docker Compose com Monitoramento
-
-```yaml
-version: '3.8'
-services:
-  audita:
-    image: ghcr.io/luizfelmach/audita:latest
-    ports:
-      - "8080:8080"
-    environment:
-      - AUDITA_PROMETHEUS_ENABLED=true
-
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-```
 
 ### Contribuindo
 
