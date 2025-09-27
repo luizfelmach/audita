@@ -152,27 +152,23 @@ Antes de usar o Audita, você precisa fazer o deploy do contrato inteligente na 
 
 ### Deploy usando Hardhat
 ```bash
-
-
 # Clone o repositório de contratos
 git clone https://github.com/luizfelmach/audita.git
 cd hardhat
 
-# No diretório de contratos
+# Configure o endereço do nó e sua conta (private key)
+vim hardhad.config.ts
+
 npm install
 
-
 # Deploy para rede local
-npx hardhat run scripts/deploy.js --network localhost
-
-# Deploy para testnet (ex: Sepolia)
-npx hardhat run scripts/deploy.js --network sepolia
+npx hardhat ignition deploy ignition/modules/Auditability.ts --network besu
 ```
 
 ### Verificação do Deploy
 ```bash
 # Verifique se o contrato foi deployado corretamente
-npx hardhat verify --network sepolia ENDERECO_DO_CONTRATO
+npx hardhat verify --network besu ENDERECO_DO_CONTRATO
 ```
 
 Após o deploy, anote o endereço do contrato para usar na configuração do Audita.
@@ -240,131 +236,64 @@ export AUDITA_ELASTIC__USERNAME="elastic"
 
 ### Enviando Logs para a Aplicação
 
-O Audita recebe logs via API REST. Você pode enviar logs individuais ou em lote:
+O Audita recebe logs via API REST:
 
-#### Log Individual
+#### Log do radius
 ```bash
-curl -X POST http://localhost:8080/api/v1/logs \
+curl -X POST http://localhost:8080/api \
   -H "Content-Type: application/json" \
-  -d '{
-    "timestamp": "2024-01-15T14:30:25Z",
-    "source": "firewall",
-    "level": "info",
-    "message": "ACCEPT TCP 192.168.1.105:45231 -> 8.8.8.8:53",
-    "metadata": {
-      "src_ip": "192.168.1.105",
-      "src_port": "45231",
-      "dst_ip": "8.8.8.8",
-      "dst_port": "53",
-      "protocol": "TCP",
-      "action": "ACCEPT"
-    }
-  }'
+  -d '
+  {
+    "@timestamp": "2025-07-14T14:04:26.427588699Z",
+    "mac": "58-6c-25-a0-ba-6d",
+    "type": "radius",
+    "username": "usuario-autenticado"
+  }
+  '
 ```
 
-#### Lote de Logs
+#### Log do DHCP
 ```bash
-curl -X POST http://localhost:8080/api/v1/logs/batch \
+curl -X POST http://localhost:8080/api \
   -H "Content-Type: application/json" \
-  -d '{
-    "logs": [
-      {
-        "timestamp": "2024-01-15T14:25:10Z",
-        "source": "radius",
-        "level": "info",
-        "message": "User joao.silva authenticated",
-        "metadata": {
-          "username": "joao.silva",
-          "mac_address": "00:1B:44:11:3A:B7",
-          "authentication_method": "PAP"
-        }
-      },
-      {
-        "timestamp": "2024-01-15T14:25:12Z",
-        "source": "dhcp",
-        "level": "info",
-        "message": "IP assigned to device",
-        "metadata": {
-          "ip_address": "192.168.1.105",
-          "mac_address": "00:1B:44:11:3A:B7",
-          "lease_time": "86400"
-        }
-      }
-    ]
-  }'
+  -d '
+  {
+    "@timestamp": "2025-07-14T14:04:26.634814527Z",
+    "ip": "172.21.29.221",
+    "lease_time": "4000",
+    "mac": "58:6c:25:a0:ba:6d",
+    "type": "dhcp"
+  }
+  '
 ```
+
+#### Log do firewall
+```bash
+curl -X POST http://localhost:8080/api \
+  -H "Content-Type: application/json" \
+  -d '
+  {
+    "@timestamp": "2025-07-14T14:04:33.000Z",
+    "dst_ip": "172.21.29.221",
+    "dst_mapped_ip": "200.137.65.102",
+    "dst_mapped_port": "57738",
+    "dst_port": "57738",
+    "src_ip": "54.186.142.142",
+    "src_mapped_ip": "54.186.142.142",
+    "src_mapped_port": "443",
+    "src_port": "443",
+    "type": "fw"
+  }
+  '
+```
+
 
 ### Identificando Quem Estava Logado
 
-Para identificar quem estava usando um IP específico em determinado momento:
+Para identificar quem estava usando um IP específico em determinado momento, acesse o site http://localhost:8080/auto-detect.
 
-```bash
-# Consulta por IP e timestamp
-curl "http://localhost:8080/api/v1/correlation?ip=192.168.1.105&timestamp=2024-01-15T14:30:25Z"
 
-# Resposta esperada:
-{
-  "user": "joao.silva",
-  "ip_address": "192.168.1.105",
-  "mac_address": "00:1B:44:11:3A:B7",
-  "session_start": "2024-01-15T14:25:10Z",
-  "confidence": "high",
-  "sources": ["radius", "dhcp"]
-}
-```
 
-#### Caso de Uso: Investigação de Acesso
-
-Imagine que você detectou um acesso suspeito ao IP externo `malicious-site.com` às 14:30:25 do dia 15/01/2024, vindo do IP interno `192.168.1.105`. Para investigar:
-
-1. **Consulte quem estava usando o IP**:
-```bash
-curl "http://localhost:8080/api/v1/correlation?ip=192.168.1.105&timestamp=2024-01-15T14:30:25Z"
-```
-
-2. **Obtenha o histórico completo do usuário**:
-```bash
-curl "http://localhost:8080/api/v1/user-activity?username=joao.silva&date=2024-01-15"
-```
-
-3. **Verifique logs de firewall relacionados**:
-```bash
-curl "http://localhost:8080/api/v1/logs?source=firewall&ip=192.168.1.105&timerange=2024-01-15T14:25:00Z,2024-01-15T14:35:00Z"
-```
-
-### Verificação de Integridade
-
-O Audita permite verificar se os logs não foram alterados desde o registro:
-
-#### Verificar Hash de um Lote
-```bash
-curl "http://localhost:8080/api/v1/integrity/batch/12345"
-
-# Resposta:
-{
-  "batch_id": "12345",
-  "blockchain_hash": "0xa1b2c3d4e5f6...",
-  "local_hash": "0xa1b2c3d4e5f6...",
-  "status": "valid",
-  "block_number": 1234567,
-  "timestamp": "2024-01-15T14:30:30Z"
-}
-```
-
-#### Verificar Integridade de Período
-```bash
-curl "http://localhost:8080/api/v1/integrity/verify?start=2024-01-15T00:00:00Z&end=2024-01-15T23:59:59Z"
-
-# Resposta:
-{
-  "period": "2024-01-15",
-  "total_batches": 144,
-  "verified_batches": 144,
-  "invalid_batches": 0,
-  "integrity_score": 100.0,
-  "status": "valid"
-}
-```
 
 ## 🔌 Integração com Coletores de Logs
 
