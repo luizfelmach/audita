@@ -335,7 +335,7 @@ filter {
 output {
   http {
     # URL da sua aplicação
-    url => "http://localhost:3000/api"
+    url => "http://localhost:8080/api"
 
     # Método HTTP
     http_method => "post"
