@@ -1,35 +1,39 @@
 <p align="center">
-  <img src="assets/audita.svg" alt="Audita Logo" width="200"/>
+  <img src="assets/audita.svg" alt="Logo do Audita" width="200"/>
 </p>
-
 <h1 align="center">Audita</h1>
-
 <p align="center">
-  <strong>Audita</strong> is a modular auditing system that ensures data integrity and provides immutable audit trails for blockchain and cloud-native infrastructures.<br>
-  Built in Rust with integrations to Prometheus, ElasticSearch, and Ethereum, it creates cryptographically secure records to guarantee system integrity and compliance.
+  <strong>Audita</strong> é um sistema de auditoria modular que garante a integridade dos dados e fornece trilhas de auditoria imutáveis para infraestruturas blockchain e nativas da nuvem.<br>
+  Construído em Rust com integrações ao Prometheus, ElasticSearch e Ethereum, ele cria registros criptograficamente seguros para garantir a integridade do sistema e conformidade.
 </p>
 
+## 📑 Índice
+- [🚀 Funcionalidades](#-funcionalidades)
+- [📦 Instalação](#-instalação)
+  - [Opção 1: Docker (Recomendado)](#opção-1-docker-recomendado)
+  - [Opção 2: Compilar do Código Fonte](#opção-2-compilar-do-código-fonte)
+  - [Opção 3: Executar via Binário Pré-compilado](#opção-3-executar-via-binário-pré-compilado)
+- [⚙️ Configuração](#️-configuração)
+  - [Formato do Arquivo de Configuração](#formato-do-arquivo-de-configuração)
+  - [Variáveis de Ambiente](#variáveis-de-ambiente)
+  - [Opções de Configuração](#opções-de-configuração)
 
-## 🚀 Features
+## 🚀 Funcionalidades
+- ⚙️ Backend de alta performance em Rust
+- 📦 Containerizado via Docker
+- 📈 Integração com Prometheus & Grafana
+- 🔍 Suporte ao Elasticsearch para logs pesquisáveis
+- ⛓️ Pipeline compatível com Ethereum Besu
+- 🧩 Arquitetura modular para fácil extensão
 
-- ⚙️ High-performance Rust backend
-- 📦 Containerized via Docker
-- 📈 Prometheus & Grafana integration
-- 🔍 Elasticsearch support for searchable logs
-- ⛓️ Ethereum Besu-compatible pipeline
-- 🧩 Modular architecture for easy extension
-
-
-## 📦 Installation
-
-### Option 1: Docker (Recommended)
+## 📦 Instalação
+### Opção 1: Docker (Recomendado)
 ```bash
 docker run ghcr.io/luizfelmach/audita:latest
 ```
 
-### Option 2: Build from Source
-Prerequisites: Rust and Cargo installed.
-
+### Opção 2: Compilar do Código Fonte
+Pré-requisitos: Rust e Cargo instalados.
 ```bash
 git clone https://github.com/luizfelmach/audita.git
 cd audita
@@ -37,28 +41,24 @@ cargo build --release
 ./target/release/audita
 ```
 
-### Option 3: Run via Precompiled Binary
-1. Download the latest binary for your platform from the [Releases page](https://github.com/luizfelmach/audita/releases)
-2. Make it executable:
+### Opção 3: Executar via Binário Pré-compilado
+1. Baixe o binário mais recente para sua plataforma na [página de Releases](https://github.com/luizfelmach/audita/releases)
+2. Torne-o executável:
 ```bash
 chmod +x audita
 ./audita
 ```
 
-## ⚙️ Configuration
+## ⚙️ Configuração
+O Audita pode ser configurado através de arquivos de configuração ou variáveis de ambiente. As fontes de configuração são carregadas na seguinte ordem de precedência:
+1. `/etc/audita/config.toml` (sistema)
+2. `~/.config/audita/config.toml` (específico do usuário)
+3. `config.toml` (diretório atual)
+4. `config/dev.toml` (configuração de desenvolvimento)
+5. Variáveis de ambiente (maior prioridade)
 
-Audita can be configured through configuration files or environment variables. Configuration sources are loaded in the following order of precedence:
-
-1. `/etc/audita/config.toml` (system-wide)
-2. `~/.config/audita/config.toml` (user-specific)
-3. `config.toml` (current directory)
-4. `config/dev.toml` (development config)
-5. Environment variables (highest priority)
-
-### Configuration File Format
-
-Create a `config.toml` file with the following structure:
-
+### Formato do Arquivo de Configuração
+Crie um arquivo `config.toml` com a seguinte estrutura:
 ```toml
 host = "0.0.0.0"
 name = "worker"
@@ -79,11 +79,10 @@ password = "changeme"
 indices_pattern = "%Y.%m.%d"
 ```
 
-### Environment Variables
+### Variáveis de Ambiente
+Todas as opções de configuração podem ser sobrescritas usando variáveis de ambiente com o prefixo `AUDITA_`. Para seções de configuração aninhadas, use sublinhados duplos (`__`).
 
-All configuration options can be overridden using environment variables with the `AUDITA_` prefix. For nested configuration sections, use double underscores (`__`).
-
-Examples:
+Exemplos:
 ```bash
 export AUDITA_PORT=8080
 export AUDITA_HOST="127.0.0.1"
@@ -93,19 +92,18 @@ export AUDITA_ELASTIC__URL="http://localhost:9200"
 export AUDITA_ELASTIC__USERNAME="elastic"
 ```
 
-### Configuration Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `host` | Server bind address | `0.0.0.0` |
-| `port` | Server port | `8080` |
-| `queue_size` | Internal queue size | `8192` |
-| `batch_size` | Batch processing size | `5` |
-| `ethereum.url` | Ethereum node URL | - |
-| `ethereum.contract` | Smart contract address | - |
-| `ethereum.private_key` | Private key for transactions | - |
-| `ethereum.max_tx_pending` | Maximum pending transactions | `50` |
-| `elastic.url` | ElasticSearch URL | - |
-| `elastic.username` | ElasticSearch username | - |
-| `elastic.password` | ElasticSearch password | - |
-| `elastic.indices_pattern` | Index naming pattern | `%Y.%m.%d` |
+### Opções de Configuração
+| Opção | Descrição | Padrão |
+|-------|-----------|---------|
+| `host` | Endereço de bind do servidor | `0.0.0.0` |
+| `port` | Porta do servidor | `8080` |
+| `queue_size` | Tamanho da fila interna | `8192` |
+| `batch_size` | Tamanho do processamento em lote | `5` |
+| `ethereum.url` | URL do nó Ethereum | - |
+| `ethereum.contract` | Endereço do contrato inteligente | - |
+| `ethereum.private_key` | Chave privada para transações | - |
+| `ethereum.max_tx_pending` | Máximo de transações pendentes | `50` |
+| `elastic.url` | URL do ElasticSearch | - |
+| `elastic.username` | Nome de usuário do ElasticSearch | - |
+| `elastic.password` | Senha do ElasticSearch | - |
+| `elastic.indices_pattern` | Padrão de nomenclatura dos índices | `%Y.%m.%d` |
