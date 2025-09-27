@@ -146,31 +146,21 @@ Antes de usar o Audita, você precisa fazer o deploy do contrato inteligente na 
 
 ### Pré-requisitos
 - Node.js e npm instalados
-- Truffle ou Hardhat configurado
+- Hardhat configurado
 - Acesso a um nó Ethereum (local ou testnet)
 - Conta com ETH para gas
 
-### Deploy usando Truffle
-```bash
-# Clone o repositório de contratos
-git clone https://github.com/luizfelmach/audita-contracts.git
-cd audita-contracts
-
-# Instale dependências
-npm install
-
-# Configure a rede no truffle-config.js
-# Execute o deploy
-truffle migrate --network development
-
-# Anote o endereço do contrato deployado
-```
-
 ### Deploy usando Hardhat
 ```bash
+
+
+# Clone o repositório de contratos
+git clone https://github.com/luizfelmach/audita.git
+cd hardhat
+
 # No diretório de contratos
 npm install
-npx hardhat compile
+
 
 # Deploy para rede local
 npx hardhat run scripts/deploy.js --network localhost
