@@ -8,13 +8,14 @@
 </p>
 
 ## 📑 Índice
-- [🚀 Funcionalidades](#-funcionalidades)
+
 - [🔍 Como Funciona](#-como-funciona)
   - [Fluxo de Acesso à Rede](#fluxo-de-acesso-à-rede)
-  - [NAT e Correlação de IPs](#nat-e-correlação-de-ips)
   - [Logs do Firewall](#logs-do-firewall)
+  - [Logs do DHCP](#logs-do-dhcp)
   - [Autenticação via RADIUS](#autenticação-via-radius)
   - [Verificação por Blockchain](#verificação-por-blockchain)
+- [🚀 Funcionalidades](#-funcionalidades)
 - [📦 Instalação](#-instalação)
   - [Opção 1: Docker (Recomendado)](#opção-1-docker-recomendado)
   - [Opção 2: Compilar do Código Fonte](#opção-2-compilar-do-código-fonte)
@@ -44,35 +45,55 @@ O Audita rastreia o fluxo completo de acesso à rede, desde a autenticação do 
 4. **NAT traduz endereços** → Mapeamento IP interno ↔ IP externo
 5. **Audita correlaciona** → Identifica quem fez cada acesso
 
-### NAT e Correlação de IPs
-
-O Network Address Translation (NAT) é um dos maiores desafios na auditoria de rede, pois múltiplos usuários internos podem aparecer com o mesmo IP externo. O Audita resolve isso através de:
-
-- **Timestamp preciso**: Correlaciona logs baseado no tempo exato
-- **Port mapping**: Rastreia portas específicas usadas pelo NAT
-- **Tabela de correlação**: Mantém registro temporal de qual usuário estava usando qual IP/porta em cada momento
-
 ### Logs do Firewall
 
 Os logs de firewall são essenciais para rastrear atividades de rede:
 
 ```
-[2024-01-15 14:30:25] ACCEPT TCP 192.168.1.105:45231 -> 8.8.8.8:53
-[2024-01-15 14:30:25] ACCEPT HTTPS 192.168.1.105:45232 -> 142.250.191.14:443
+{
+  "@timestamp": "2025-07-14T14:04:33.000Z",
+  "dst_ip": "172.21.29.221",
+  "dst_mapped_ip": "200.137.65.102",
+  "dst_mapped_port": "57738",
+  "dst_port": "57738",
+  "src_ip": "54.186.142.142",
+  "src_mapped_ip": "54.186.142.142",
+  "src_mapped_port": "443",
+  "src_port": "443",
+  "type": "fw",
+  ...
+}
 ```
 
 O Audita captura e processa esses logs para:
-- Identificar conexões permitidas e negadas
 - Rastrear destinos acessados
 - Correlacionar com dados de autenticação
+
+### Logs do DHCP
+
+Os logs do DHCP são essenciais para saber o MAC address do IP interno atribuído:
+
+```
+{
+  "@timestamp": "2025-07-14T14:04:26.634814527Z",
+  "ip": "172.21.29.221",
+  "lease_time": "4000",
+  "mac": "58:6c:25:a0:ba:6d",
+  "type": "dhcp"
+}
+```
 
 ### Autenticação via RADIUS
 
 O servidor RADIUS fornece a camada de identificação de usuários:
 
 ```
-[2024-01-15 14:25:10] User "joao.silva" authenticated from MAC 00:1B:44:11:3A:B7
-[2024-01-15 14:25:12] DHCP assigned 192.168.1.105 to MAC 00:1B:44:11:3A:B7
+{
+  "@timestamp": "2025-07-14T14:04:26.427588699Z",
+  "mac": "58-6c-25-a0-ba-6d",
+  "type": "radius",
+  "username": "usuario-logado"
+}
 ```
 
 Essa correlação permite que o Audita saiba exatamente:
