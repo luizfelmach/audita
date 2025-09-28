@@ -16,6 +16,7 @@
   - [Autenticação via RADIUS](#autenticação-via-radius)
   - [Verificação por Blockchain](#verificação-por-blockchain)
 - [🚀 Funcionalidades](#-funcionalidades)
+- [✨ Quick Start](#-quick-start)
 - [📦 Instalação](#-instalação)
   - [Opção 1: Docker (Recomendado)](#opção-1-docker-recomendado)
   - [Opção 2: Compilar do Código Fonte](#opção-2-compilar-do-código-fonte)
@@ -49,7 +50,7 @@ Os logs de firewall são essenciais para rastrear atividades de rede:
 
 ```
 {
-  "@timestamp": "2025-07-14T14:04:33.000Z",
+  "timestamp": "2025-07-14T14:04:33.000Z",
   "dst_ip": "172.21.29.221",
   "dst_mapped_ip": "200.137.65.102",
   "dst_mapped_port": "57738",
@@ -58,8 +59,7 @@ Os logs de firewall são essenciais para rastrear atividades de rede:
   "src_mapped_ip": "54.186.142.142",
   "src_mapped_port": "443",
   "src_port": "443",
-  "type": "fw",
-  ...
+  "type": "fw"
 }
 ```
 
@@ -74,7 +74,7 @@ Os logs do DHCP são essenciais para saber o MAC address do IP interno atribuíd
 
 ```
 {
-  "@timestamp": "2025-07-14T14:04:26.634814527Z",
+  "timestamp": "2025-07-14T14:04:26.634814527Z",
   "ip": "172.21.29.221",
   "lease_time": "4000",
   "mac": "58:6c:25:a0:ba:6d",
@@ -88,8 +88,8 @@ O servidor RADIUS fornece a camada de identificação de usuários:
 
 ```
 {
-  "@timestamp": "2025-07-14T14:04:26.427588699Z",
-  "mac": "58-6c-25-a0-ba-6d",
+  "timestamp": "2025-07-14T14:04:26.427588699Z",
+  "mac": "58:6c:25:a0:ba:6d",
   "type": "radius",
   "username": "usuario-logado"
 }
@@ -385,7 +385,7 @@ curl -X POST http://localhost:8080/api/auditing/auto \
 
 ## 4. Verificação da Integridade na Blockchain
 
-### Consultar Hash do Documento
+### Consultar Hash do Documento no Storage
 
 Verifica o hash armazenado na blockchain:
 
@@ -402,9 +402,9 @@ curl -X GET http://localhost:8080/api/storage/hash/37d6026b-253e-4c4b-86b2-4d995
 }
 ```
 
-### Consultar Assinante do Documento
+### Consultar Hash do Documento na Blockchain
 
-Verifica quem assinou o documento na blockchain:
+Verifica a hash do documento na blockchain:
 
 ```bash
 curl -X GET http://localhost:8080/api/storage/signer/37d6026b-253e-4c4b-86b2-4d9951705066
