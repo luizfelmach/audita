@@ -1,4 +1,4 @@
-use crate::domain::{Batch, Condition, DocumentQuery, Hasher, Operator, Query, QueryResult, StorageRepository};
+use crate::domain::{Batch, Condition, Document, DocumentQuery, Hasher, Operator, Query, StorageRepository};
 use anyhow::{bail, Ok, Result};
 use async_trait::async_trait;
 use chrono::Local;
@@ -8,11 +8,40 @@ use elasticsearch::{
     http::transport::{SingleNodeConnectionPool, TransportBuilder},
     BulkOperation, BulkParts, Elasticsearch, SearchParts,
 };
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::sync::Arc;
 
-const AUDITA_ID_KEYWORD: &str = "audita_id";
-const AUDITA_ORD_KEYWORD: &str = "audita_ord";
+#[derive(Serialize, Deserialize)]
+pub struct ElasticsearchDocument {
+    pub audita_id: String,
+    pub audita_ord: usize,
+
+    #[serde(flatten)]
+    pub document: Document,
+}
+
+impl ElasticsearchDocument {
+    pub fn new(audita_id: impl Into<String>, audita_ord: usize, document: Document) -> Self {
+        Self { audita_id: audita_id.into(), audita_ord, document }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct EsHit<T> {
+    _source: T,
+    sort: Option<Vec<serde_json::Value>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EsHits<T> {
+    hits: Vec<EsHit<T>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct EsResponse<T> {
+    hits: EsHits<T>,
+}
 
 #[derive(Clone)]
 pub struct ElasticsearchStorageRepository {
@@ -108,10 +137,9 @@ impl StorageRepository for ElasticsearchStorageRepository {
         let index = Local::now().format(&self.indices_pattern).to_string();
 
         for (i, doc) in batch.documents.iter().enumerate() {
-            let mut content = doc.clone();
-            content.insert(AUDITA_ID_KEYWORD.into(), batch.id.clone().into());
-            content.insert(AUDITA_ORD_KEYWORD.into(), i.into());
-            ops.push(BulkOperation::create(content.into()).index(&index).into());
+            let elastic_doc = ElasticsearchDocument::new(batch.id.clone(), i, doc.clone());
+            let json_doc: Map<String, Value> = serde_json::to_value(elastic_doc)?.as_object().cloned().unwrap_or_default();
+            ops.push(BulkOperation::create(json_doc).index(&index).into());
         }
 
         let response = self.client.bulk(BulkParts::None).body(ops).send().await?;
@@ -126,67 +154,55 @@ impl StorageRepository for ElasticsearchStorageRepository {
     }
 
     async fn retrieve(&self, id: &String) -> Result<Option<Batch>> {
-        let mut documents = Vec::new();
-        let mut after = None;
+        // cria uma query que filtra apenas pelo id
+        let query = Query {
+            and: Some(vec![Condition { field: "audita_id.keyword".to_string(), op: Operator::EqString(id.to_string()) }]),
+            ..Default::default()
+        };
+
+        let documents: Vec<Document> = self.search(&query).await?.into_iter().map(|dq| dq.source).collect();
+
+        if documents.is_empty() {
+            return Ok(None);
+        }
+
+        let digest = self.hasher.digest(&documents)?;
+
+        Ok(Some(Batch { id: id.to_string(), documents, digest }))
+    }
+
+    async fn search(&self, query: &Query) -> Result<Vec<DocumentQuery>> {
+        let query = self.parse_query(query);
+
+        let mut results = Vec::new();
+        let mut after: Option<Vec<serde_json::Value>> = None;
+
         loop {
             let mut search = json!({
-                "query": { "term": { format!("{AUDITA_ID_KEYWORD}.keyword"): id } },
-                "sort": [{ AUDITA_ORD_KEYWORD: "asc" }],
+                "query": query,
+                "sort": [{ "audita_ord": "asc" }],
                 "size": 10_000
             });
 
             if let Some(values) = &after {
                 search["search_after"] = json!(values);
             }
-            let hits = self.client.search(SearchParts::None).body(search).send().await?.json::<Value>().await?["hits"]["hits"]
-                .as_array()
-                .cloned()
-                .unwrap_or_default();
 
-            if hits.is_empty() {
+            let response = self.client.search(SearchParts::None).body(search).send().await?;
+
+            let body: EsResponse<ElasticsearchDocument> = response.json().await?;
+
+            if body.hits.hits.is_empty() {
                 break;
             }
-            for hit in &hits {
-                if let Some(mut source) = hit["_source"].as_object().cloned() {
-                    let _ = source.remove(AUDITA_ORD_KEYWORD).as_ref().and_then(Value::as_u64).unwrap() as usize;
-                    let _ = source.remove(AUDITA_ID_KEYWORD).as_ref().and_then(Value::as_str).unwrap().to_string();
-                    documents.push(source);
-                }
+
+            for hit in body.hits.hits.iter() {
+                let es_doc = &hit._source;
+                results.push(DocumentQuery { id: es_doc.audita_id.clone(), source: es_doc.document.clone() });
             }
 
-            after = hits.last().and_then(|hit| hit["sort"].as_array().cloned());
+            after = body.hits.hits.last().and_then(|h| h.sort.clone());
         }
-        if documents.is_empty() {
-            return Ok(None);
-        }
-        let digest = self.hasher.digest(&documents)?;
-
-        Ok(Some(Batch { id: id.clone(), documents, digest }))
-    }
-
-    async fn search(&self, query: &Query) -> Result<QueryResult> {
-        let query = self.parse_query(&query);
-
-        let search = json!({
-            "query": query,
-            "sort": [{ AUDITA_ORD_KEYWORD: "asc" }],
-            "size": 50
-        });
-
-        let response = self.client.search(SearchParts::None).body(search).send().await?;
-
-        let body = response.json::<Value>().await?;
-        let hits = body["hits"]["hits"].as_array().cloned().unwrap_or_default();
-
-        let results = hits
-            .into_iter()
-            .filter_map(|hit| {
-                let mut source = hit.get("_source")?.as_object()?.clone();
-                let _ = source.remove("audita_ord")?.as_u64()? as usize;
-                let id = source.remove("audita_id")?.as_str()?.to_string();
-                Some(DocumentQuery { id, source })
-            })
-            .collect();
 
         Ok(results)
     }
