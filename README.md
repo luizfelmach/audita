@@ -121,10 +121,28 @@ A blockchain atua como uma camada adicional de verificação:
 
 ## Quick Start
 
+Este guia rápido demonstra como configurar e usar o sistema Audita para auditoria de logs de rede usando blockchain e Elasticsearch.
+
+## Pré-requisitos
+
+- Docker
+- Acesso à internet para baixar as imagens Docker
+
+## 1. Configuração da Infraestrutura
+
+### Criando a Rede Docker
+
+Primeiro, crie uma rede Docker dedicada para os containers do Audita:
+
+```bash
+docker network create audita
 ```
 
-docker network create audita
+### Iniciando o Elasticsearch
 
+Configure e inicie o Elasticsearch para armazenamento dos logs:
+
+```bash
 docker run -d \
   --name elasticsearch \
   --network audita \
@@ -133,7 +151,20 @@ docker run -d \
   -e "ELASTIC_PASSWORD=changeme" \
   -p 9200:9200 \
   docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+```
 
+**Configurações:**
+
+- `discovery.type=single-node`: Configura o Elasticsearch como nó único
+- `xpack.security.enabled=true`: Habilita autenticação
+- `ELASTIC_PASSWORD=changeme`: Define a senha do usuário elastic
+- Porta `9200`: Interface HTTP do Elasticsearch
+
+### Iniciando o Besu (Blockchain)
+
+Configure e inicie o nó Hyperledger Besu para a blockchain:
+
+```bash
 docker run -d \
   --name besu \
   --network audita \
@@ -155,7 +186,21 @@ docker run -d \
   --rpc-http-max-active-connections=100000 \
   --min-gas-price=0 \
   --tx-pool-max-future-by-sender=1024
+```
 
+**Configurações principais:**
+
+- `--network=dev`: Rede de desenvolvimento
+- `--rpc-http-enabled`: Habilita RPC HTTP
+- `--miner-enabled`: Habilita mineração
+- `--min-gas-price=0`: Gas price zero para desenvolvimento
+- Porta `8545`: Interface RPC do Besu
+
+## 2. Iniciando o Audita
+
+Configure e inicie o container principal do Audita:
+
+```bash
 docker run -d \
   --name audita \
   --network audita \
@@ -167,99 +212,244 @@ docker run -d \
   -e AUDITA__ELASTIC__PASSWORD="changeme" \
   -p 8080:8080 \
   ghcr.io/luizfelmach/audita:dev
-
-
-curl -X POST http://localhost:8080/api \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "type": "radius",
-                                                  "mac": "AA:BB:CC:DD:EE:FF",
-                                                  "username": "luiz.f.machado",
-                                                  "timestamp": "2025-09-28T14:20:00Z"
-                                                }'
-
-
-curl -X POST http://localhost:8080/api \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "type": "dhcp",
-                                                  "ip": "192.168.0.10",
-                                                  "mac": "AA:BB:CC:DD:EE:FF",
-                                                  "lease_time": 3600,
-                                                  "timestamp": "2025-09-28T14:25:00Z"
-                                                }'
-
-
-curl -X POST http://localhost:8080/api \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "type": "fw",
-                                                  "dst_ip": "10.0.0.1",
-                                                  "dst_port": 443,
-                                                  "dst_mapped_ip": "54.186.142.142",
-                                                  "dst_mapped_port": 443,
-                                                  "src_ip": "192.168.0.10",
-                                                  "src_port": 12345,
-                                                  "src_mapped_ip": "200.137.65.102",
-                                                  "src_mapped_port": 98765,
-                                                  "timestamp": "2025-09-28T14:30:00Z"
-                                                }'
-
-
-curl -X POST http://localhost:8080/api/auditing/firewall \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "ip": "200.137.65.102",
-                                                  "port": 98765,
-                                                  "timestamp": "2025-09-28T14:30:00Z",
-                                                  "delta": 120
-                                                }'
-{"documents":[{"audita_id":"37d6026b-253e-4c4b-86b2-4d9951705066","audita_ord":0,"type":"fw","dst_ip":"10.0.0.1","dst_port":443,"dst_mapped_ip":"54.186.142.142","dst_mapped_port":443,"src_ip":"192.168.0.10","src_port":12345,"src_mapped_ip":"200.137.65.102","src_mapped_port":98765,"timestamp":"2025-09-28T14:30:00Z"}]}⏎
-
-
-curl -X POST http://localhost:8080/api/auditing/dhcp \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "ip": "192.168.0.10",
-                                                  "timestamp": "2025-09-28T14:30:00Z",
-                                                  "delta": 10
-                                                }'
-{"documents":[{"audita_id":"04cf3e65-84a7-4408-9d97-c67bb80603f5","audita_ord":0,"type":"dhcp","ip":"192.168.0.10","mac":"AA:BB:CC:DD:EE:FF","lease_time":3600,"timestamp":"2025-09-28T14:25:00Z"}]}⏎
-
-
-curl -X POST http://localhost:8080/api/auditing/radius \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "mac": "AA:BB:CC:DD:EE:FF",
-                                                  "timestamp": "2025-09-28T14:30:00Z",
-                                                  "delta": 10
-                                                }'
-
-{"documents":[{"audita_id":"f6d0bc60-8f3a-4bee-8cca-028f33948f8e","audita_ord":0,"type":"radius","mac":"AA:BB:CC:DD:EE:FF","username":"luiz.f.machado","timestamp":"2025-09-28T14:20:00Z"}]}⏎
-
-
-
-curl -X POST http://localhost:8080/api/auditing/auto \
-                                                -H "Content-Type: application/json" \
-                                                -d '{
-                                                  "ip": "200.137.65.102",
-                                                  "port": 98765,
-                                                  "timestamp": "2025-09-28T14:30:00Z",
-                                                  "delta": 120
-                                                }'
-
-{"firewall":{"audita_id":"37d6026b-253e-4c4b-86b2-4d9951705066","audita_ord":0,"type":"fw","dst_ip":"10.0.0.1","dst_port":443,"dst_mapped_ip":"54.186.142.142","dst_mapped_port":443,"src_ip":"192.168.0.10","src_port":12345,"src_mapped_ip":"200.137.65.102","src_mapped_port":98765,"timestamp":"2025-09-28T14:30:00Z"},"dhcp":{"audita_id":"04cf3e65-84a7-4408-9d97-c67bb80603f5","audita_ord":0,"type":"dhcp","ip":"192.168.0.10","mac":"AA:BB:CC:DD:EE:FF","lease_time":3600,"timestamp":"2025-09-28T14:25:00Z"},"radius":{"audita_id":"f6d0bc60-8f3a-4bee-8cca-028f33948f8e","audita_ord":0,"type":"radius","mac":"AA:BB:CC:DD:EE:FF","username":"luiz.f.machado","timestamp":"2025-09-28T14:20:00Z"}}
-
-
-curl -X GET http://localhost:8080/api/storage/hash/37d6026b-253e-4c4b-86b2-4d9951705066
-
-{"id":"37d6026b-253e-4c4b-86b2-4d9951705066","hash":"59d1fed3a97534e6202215f1e50f506c4f609ec6993466a68dce1d316bb7a4e8"}
-
-curl -X GET http://localhost:8080/api/storage/signer/37d6026b-253e-4c4b-86b2-4d9951705066
-
-{"id":"37d6026b-253e-4c4b-86b2-4d9951705066","hash":"59d1fed3a97534e6202215f1e50f506c4f609ec6993466a68dce1d316bb7a4e8"}
-
 ```
+
+**Configurações:**
+
+- `AUDITA__BATCH_SIZE=1`: Processa um registro por vez
+- `AUDITA__ETHEREUM__URL`: Endpoint do Besu
+- `AUDITA__ETHEREUM__PRIVATE_KEY`: Chave privada para transações
+- `AUDITA__ELASTIC__*`: Credenciais do Elasticsearch
+- Porta `8080`: API REST do Audita
+
+## 3. Testando o Sistema
+
+### 3.1. Enviando Logs de Rede
+
+#### Log RADIUS (Autenticação)
+
+```bash
+curl -X POST http://localhost:8080/api \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "radius",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "username": "luiz.f.machado",
+    "timestamp": "2025-09-28T14:20:00Z"
+  }'
+```
+
+#### Log DHCP (Atribuição de IP)
+
+```bash
+curl -X POST http://localhost:8080/api \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "dhcp",
+    "ip": "192.168.0.10",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "lease_time": 3600,
+    "timestamp": "2025-09-28T14:25:00Z"
+  }'
+```
+
+#### Log Firewall (Tráfego de Rede)
+
+```bash
+curl -X POST http://localhost:8080/api \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "fw",
+    "dst_ip": "10.0.0.1",
+    "dst_port": 443,
+    "dst_mapped_ip": "54.186.142.142",
+    "dst_mapped_port": 443,
+    "src_ip": "192.168.0.10",
+    "src_port": 12345,
+    "src_mapped_ip": "200.137.65.102",
+    "src_mapped_port": 98765,
+    "timestamp": "2025-09-28T14:30:00Z"
+  }'
+```
+
+### 3.2. Consultando Logs por Tipo
+
+#### Auditoria por Firewall
+
+Busca logs de firewall por IP e porta de origem:
+
+```bash
+curl -X POST http://localhost:8080/api/auditing/firewall \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "200.137.65.102",
+    "port": 98765,
+    "timestamp": "2025-09-28T14:30:00Z",
+    "delta": 120
+  }'
+```
+
+**Resposta esperada:**
+
+```json
+{
+  "documents": [
+    {
+      "audita_id": "37d6026b-253e-4c4b-86b2-4d9951705066",
+      "audita_ord": 0,
+      "type": "fw",
+      "dst_ip": "10.0.0.1",
+      "dst_port": 443,
+      "dst_mapped_ip": "54.186.142.142",
+      "dst_mapped_port": 443,
+      "src_ip": "192.168.0.10",
+      "src_port": 12345,
+      "src_mapped_ip": "200.137.65.102",
+      "src_mapped_port": 98765,
+      "timestamp": "2025-09-28T14:30:00Z"
+    }
+  ]
+}
+```
+
+#### Auditoria por DHCP
+
+Busca logs DHCP por IP:
+
+```bash
+curl -X POST http://localhost:8080/api/auditing/dhcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "192.168.0.10",
+    "timestamp": "2025-09-28T14:30:00Z",
+    "delta": 10
+  }'
+```
+
+#### Auditoria por RADIUS
+
+Busca logs RADIUS por endereço MAC:
+
+```bash
+curl -X POST http://localhost:8080/api/auditing/radius \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "timestamp": "2025-09-28T14:30:00Z",
+    "delta": 10
+  }'
+```
+
+### 3.3. Auditoria Automática Correlacionada
+
+Busca e correlaciona automaticamente logs de firewall, DHCP e RADIUS:
+
+```bash
+curl -X POST http://localhost:8080/api/auditing/auto \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip": "200.137.65.102",
+    "port": 98765,
+    "timestamp": "2025-09-28T14:30:00Z",
+    "delta": 120
+  }'
+```
+
+**Resposta esperada:**
+
+```json
+{
+  "firewall": {
+    "audita_id": "37d6026b-253e-4c4b-86b2-4d9951705066",
+    "type": "fw",
+    "src_ip": "192.168.0.10",
+    "src_mapped_ip": "200.137.65.102",
+    ...
+  },
+  "dhcp": {
+    "audita_id": "04cf3e65-84a7-4408-9d97-c67bb80603f5",
+    "type": "dhcp",
+    "ip": "192.168.0.10",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    ...
+  },
+  "radius": {
+    "audita_id": "f6d0bc60-8f3a-4bee-8cca-028f33948f8e",
+    "type": "radius",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "username": "luiz.f.machado",
+    ...
+  }
+}
+```
+
+## 4. Verificação da Integridade na Blockchain
+
+### Consultar Hash do Documento
+
+Verifica o hash armazenado na blockchain:
+
+```bash
+curl -X GET http://localhost:8080/api/storage/hash/37d6026b-253e-4c4b-86b2-4d9951705066
+```
+
+**Resposta:**
+
+```json
+{
+  "id": "37d6026b-253e-4c4b-86b2-4d9951705066",
+  "hash": "59d1fed3a97534e6202215f1e50f506c4f609ec6993466a68dce1d316bb7a4e8"
+}
+```
+
+### Consultar Assinante do Documento
+
+Verifica quem assinou o documento na blockchain:
+
+```bash
+curl -X GET http://localhost:8080/api/storage/signer/37d6026b-253e-4c4b-86b2-4d9951705066
+```
+
+## 5. Parâmetros da API
+
+### Parâmetros Comuns
+
+- `timestamp`: Momento do evento (formato ISO 8601)
+- `delta`: Janela de tempo em segundos para busca (±delta segundos do timestamp)
+
+### Tipos de Log Suportados
+
+1. **RADIUS**: Logs de autenticação
+   - `mac`: Endereço MAC do dispositivo
+   - `username`: Nome do usuário autenticado
+
+2. **DHCP**: Logs de atribuição de IP
+   - `ip`: Endereço IP atribuído
+   - `mac`: Endereço MAC do dispositivo
+   - `lease_time`: Tempo de concessão em segundos
+
+3. **Firewall**: Logs de tráfego de rede
+   - `src_ip`, `src_port`: IP e porta de origem
+   - `dst_ip`, `dst_port`: IP e porta de destino
+   - `src_mapped_ip`, `src_mapped_port`: IP e porta mapeados de origem (NAT)
+   - `dst_mapped_ip`, `dst_mapped_port`: IP e porta mapeados de destino (NAT)
+
+## 6. Limpeza
+
+Para parar e remover todos os containers:
+
+```bash
+docker stop audita besu elasticsearch
+docker rm audita besu elasticsearch
+docker network rm audita
+```
+
+## Notas Importantes
+
+- Este setup usa configurações de desenvolvimento - **não use em produção**
+- A chave privada Ethereum está hardcoded - substitua por uma segura em produção
+- A senha do Elasticsearch deve ser alterada em ambiente produtivo
+- O parâmetro `delta` permite buscar eventos em uma janela de tempo ao redor do timestamp especificado
 
 ## 📦 Instalação
 
