@@ -34,6 +34,13 @@ pub struct SearchResponse {
     documents: Vec<StorableDocument>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct AutoResponse {
+    pub firewall: StorableDocument,
+    pub dhcp: StorableDocument,
+    pub radius: StorableDocument,
+}
+
 pub async fn search_firewall(State(ctx): State<Context>, Json(req): Json<SearchFirewallRequest>) -> HttpResult<Json<SearchResponse>> {
     let SearchFirewallRequest { ip, port, timestamp, delta } = req;
 
