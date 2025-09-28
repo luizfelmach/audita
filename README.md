@@ -131,11 +131,13 @@ docker run -d \
   --network audita \
   -e "discovery.type=single-node" \
   -e "xpack.security.enabled=false" \
+  -p 9200:9200 \
   docker.elastic.co/elasticsearch/elasticsearch:8.15.2
 
 docker run -d \
   --name besu \
   --network audita \
+  -p 8545:8545 \
   hyperledger/besu:25.2.2 \
   --network=dev \
   --rpc-http-cors-origins="all" \
@@ -162,6 +164,54 @@ docker run -d \
   -e AUDITA_ELASTIC_URL="http://elasticsearch:9200" \
   -p 8080:8080 \
   ghcr.io/luizfelmach/audita:dev
+
+
+curl -X POST http://localhost:8080/api \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "type": "radius",
+                                                  "mac": "AA:BB:CC:DD:EE:FF",
+                                                  "username": "luiz.f.machado",
+                                                  "timestamp": "2025-09-28T14:20:00Z"
+                                                }'
+
+
+curl -X POST http://localhost:8080/api \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "type": "dhcp",
+                                                  "ip": "192.168.0.10",
+                                                  "mac": "AA:BB:CC:DD:EE:FF",
+                                                  "lease_time": 3600,
+                                                  "timestamp": "2025-09-28T14:25:00Z"
+                                                }'
+
+
+curl -X POST http://localhost:8080/api \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "type": "fw",
+                                                  "dst_ip": "10.0.0.1",
+                                                  "dst_port": 443,
+                                                  "dst_mapped_ip": "54.186.142.142",
+                                                  "dst_mapped_port": 443,
+                                                  "src_ip": "192.168.0.10",
+                                                  "src_port": 12345,
+                                                  "src_mapped_ip": "200.137.65.102",
+                                                  "src_mapped_port": 98765,
+                                                  "timestamp": "2025-09-28T14:30:00Z"
+                                                }'
+
+
+curl -X POST http://localhost:8080/api/auditing/firewall \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "ip": "200.137.65.102",
+                                                  "port": 98765,
+                                                  "timestamp": "2025-09-28T14:30:00Z",
+                                                  "delta": 120
+                                                }'
+
 
 ```
 

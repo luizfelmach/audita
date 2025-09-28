@@ -35,7 +35,7 @@ impl AppConfig {
             builder = builder.add_source(File::with_name(&config).required(false));
         }
 
-        builder = builder.add_source(Environment::with_prefix("AUDITA").separator("_"));
+        builder = builder.add_source(Environment::with_prefix("AUDITA").separator("__"));
 
         let config = builder.build()?;
         Ok(config.try_deserialize()?)

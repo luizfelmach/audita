@@ -5,12 +5,7 @@ queue_size = 8192
 batch_size = 5
 
 [ethereum]
-url = "http://localhost:8545"
-private_key = "0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"
 max_tx_pending = 50
 
 [elastic]
-url = "http://localhost:9200"
-username = "elastic"
-password = "changeme"
 indices_pattern = "%Y.%m.%d"
