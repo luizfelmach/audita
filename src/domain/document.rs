@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(tag = "type", content = "data")]
+#[serde(tag = "type")]
 pub enum Document {
     #[serde(rename = "fw")]
     Firewall(FirewallDocument),
