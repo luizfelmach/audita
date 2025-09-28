@@ -29,6 +29,7 @@ fn build_firewall_query(ip: &str, port: usize, timestamp: DateTime<Utc>, delta: 
     Query {
         and: Some(vec![
             Condition { field: "src_mapped_ip".to_string(), op: Operator::EqString(ip.to_string()) },
+            Condition { field: "type".to_string(), op: Operator::EqString("fw".into()) },
             Condition { field: "src_mapped_port".to_string(), op: Operator::EqInt(port as i64) },
             Condition { field: "timestamp".to_string(), op: Operator::BetweenDate(start_time, end_time) },
         ]),
@@ -43,6 +44,7 @@ fn build_dhcp_query(ip: &str, reference_time: DateTime<Utc>) -> Query {
     Query {
         and: Some(vec![
             Condition { field: "ip".to_string(), op: Operator::EqString(ip.to_string()) },
+            Condition { field: "type".to_string(), op: Operator::EqString("dhcp".into()) },
             Condition { field: "timestamp".to_string(), op: Operator::BetweenDate(start_time, end_time) },
         ]),
         ..Default::default()
@@ -56,6 +58,7 @@ fn build_radius_query(mac: &str, reference_time: DateTime<Utc>) -> Query {
     Query {
         and: Some(vec![
             Condition { field: "mac".to_string(), op: Operator::EqString(mac.to_string()) },
+            Condition { field: "type".to_string(), op: Operator::EqString("radius".into()) },
             Condition { field: "timestamp".to_string(), op: Operator::BetweenDate(start_time, end_time) },
         ]),
         ..Default::default()
@@ -66,13 +69,15 @@ pub async fn auto_search(State(ctx): State<Context>, Json(req): Json<AutoSearchR
     let AutoSearchRequest { ip, port, timestamp, delta } = req;
 
     let fw_query = build_firewall_query(&ip, port, timestamp, delta);
+
     let fw_docs = ctx.storage.search(&fw_query).await.map_err(|e| AppError::Internal(e))?;
 
     let fw_doc = fw_docs.into_iter().min_by_key(|d| (d.timestamp() - timestamp).num_milliseconds().abs());
 
     let dhcp_doc = if let Some(fw_doc_ref) = &fw_doc {
+        let fw_doc = fw_doc_ref.as_firewall().unwrap();
         let fw_time = fw_doc_ref.timestamp();
-        let dhcp_query = build_dhcp_query(&ip, fw_time);
+        let dhcp_query = build_dhcp_query(&fw_doc.src_ip, fw_time);
         let dhcp_docs = ctx.storage.search(&dhcp_query).await.ok();
         dhcp_docs.and_then(|docs| docs.into_iter().min_by_key(|d| (d.timestamp() - fw_time).num_milliseconds().abs()))
     } else {

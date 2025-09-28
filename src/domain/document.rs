@@ -44,7 +44,7 @@ pub struct RadiusDocument {
     pub timestamp: DateTime<Utc>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct StorableDocument {
     #[serde(rename = "audita_id")]
     pub id: String,
@@ -68,12 +68,24 @@ impl StorableDocument {
         }
     }
 
+    pub fn as_firewall(&self) -> Option<&FirewallDocument> {
+        self.document.as_firewall()
+    }
+
     pub fn as_dhcp(&self) -> Option<&DhcpDocument> {
         self.document.as_dhcp()
     }
 }
 
 impl Document {
+    pub fn as_firewall(&self) -> Option<&FirewallDocument> {
+        if let Document::Firewall(ref firewall) = self {
+            Some(firewall)
+        } else {
+            None
+        }
+    }
+
     pub fn as_dhcp(&self) -> Option<&DhcpDocument> {
         if let Document::Dhcp(ref dhcp) = self {
             Some(dhcp)

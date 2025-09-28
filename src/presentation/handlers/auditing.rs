@@ -31,7 +31,7 @@ pub struct SearchRadiusRequest {
 
 #[derive(Serialize, Deserialize)]
 pub struct SearchResponse {
-    documents: Vec<StorableDocument>,
+    pub documents: Vec<StorableDocument>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -79,6 +79,7 @@ pub fn build_firewall_query(ip: &str, port: usize, timestamp: DateTime<Utc>, del
         and: Some(vec![
             Condition { field: "src_mapped_ip".to_string(), op: Operator::EqString(ip.to_string()) },
             Condition { field: "src_mapped_port".to_string(), op: Operator::EqInt(port as i64) },
+            Condition { field: "type".to_string(), op: Operator::EqString("fw".into()) },
             Condition { field: "timestamp".to_string(), op: Operator::BetweenDate(start_time, end_time) },
         ]),
         ..Default::default()
@@ -92,6 +93,7 @@ pub fn build_dhcp_query(ip: &str, timestamp: DateTime<Utc>, delta: i64) -> Query
     Query {
         and: Some(vec![
             Condition { field: "ip".to_string(), op: Operator::EqString(ip.to_string()) },
+            Condition { field: "type".to_string(), op: Operator::EqString("dhcp".into()) },
             Condition { field: "timestamp".to_string(), op: Operator::BetweenDate(start_time, end_time) },
         ]),
         ..Default::default()
@@ -105,6 +107,7 @@ pub fn build_radius_query(mac: &str, timestamp: DateTime<Utc>, delta: i64) -> Qu
     Query {
         and: Some(vec![
             Condition { field: "mac".to_string(), op: Operator::EqString(mac.to_string()) },
+            Condition { field: "type".to_string(), op: Operator::EqString("radius".into()) },
             Condition { field: "timestamp".to_string(), op: Operator::BetweenDate(start_time, end_time) },
         ]),
         ..Default::default()

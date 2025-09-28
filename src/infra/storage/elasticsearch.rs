@@ -139,8 +139,10 @@ impl StorageRepository for ElasticsearchStorageRepository {
     }
 
     async fn retrieve(&self, id: &String) -> Result<Option<Batch>> {
-        let query =
-            Query { and: Some(vec![Condition { field: "id".to_string(), op: Operator::EqString(id.to_string()) }]), ..Default::default() };
+        let query = Query {
+            and: Some(vec![Condition { field: "audita_id".to_string(), op: Operator::EqString(id.to_string()) }]),
+            ..Default::default()
+        };
 
         let documents: Vec<Document> = self.search(&query).await?.into_iter().map(|dq| dq.document).collect();
 
@@ -162,7 +164,7 @@ impl StorageRepository for ElasticsearchStorageRepository {
         loop {
             let mut search = json!({
                 "query": query,
-                "sort": [{ "ord": "asc" }],
+                "sort": [{ "audita_ord": "asc" }],
                 "size": 10_000
             });
 

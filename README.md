@@ -125,12 +125,12 @@ A blockchain atua como uma camada adicional de verificação:
 
 docker network create audita
 
-
 docker run -d \
   --name elasticsearch \
   --network audita \
   -e "discovery.type=single-node" \
-  -e "xpack.security.enabled=false" \
+  -e "xpack.security.enabled=true" \
+  -e "ELASTIC_PASSWORD=changeme" \
   -p 9200:9200 \
   docker.elastic.co/elasticsearch/elasticsearch:8.15.2
 
@@ -211,7 +211,50 @@ curl -X POST http://localhost:8080/api/auditing/firewall \
                                                   "timestamp": "2025-09-28T14:30:00Z",
                                                   "delta": 120
                                                 }'
+{"documents":[{"audita_id":"37d6026b-253e-4c4b-86b2-4d9951705066","audita_ord":0,"type":"fw","dst_ip":"10.0.0.1","dst_port":443,"dst_mapped_ip":"54.186.142.142","dst_mapped_port":443,"src_ip":"192.168.0.10","src_port":12345,"src_mapped_ip":"200.137.65.102","src_mapped_port":98765,"timestamp":"2025-09-28T14:30:00Z"}]}⏎
 
+
+curl -X POST http://localhost:8080/api/auditing/dhcp \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "ip": "192.168.0.10",
+                                                  "timestamp": "2025-09-28T14:30:00Z",
+                                                  "delta": 10
+                                                }'
+{"documents":[{"audita_id":"04cf3e65-84a7-4408-9d97-c67bb80603f5","audita_ord":0,"type":"dhcp","ip":"192.168.0.10","mac":"AA:BB:CC:DD:EE:FF","lease_time":3600,"timestamp":"2025-09-28T14:25:00Z"}]}⏎
+
+
+curl -X POST http://localhost:8080/api/auditing/radius \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "mac": "AA:BB:CC:DD:EE:FF",
+                                                  "timestamp": "2025-09-28T14:30:00Z",
+                                                  "delta": 10
+                                                }'
+
+{"documents":[{"audita_id":"f6d0bc60-8f3a-4bee-8cca-028f33948f8e","audita_ord":0,"type":"radius","mac":"AA:BB:CC:DD:EE:FF","username":"luiz.f.machado","timestamp":"2025-09-28T14:20:00Z"}]}⏎
+
+
+
+curl -X POST http://localhost:8080/api/auditing/auto \
+                                                -H "Content-Type: application/json" \
+                                                -d '{
+                                                  "ip": "200.137.65.102",
+                                                  "port": 98765,
+                                                  "timestamp": "2025-09-28T14:30:00Z",
+                                                  "delta": 120
+                                                }'
+
+{"firewall":{"audita_id":"37d6026b-253e-4c4b-86b2-4d9951705066","audita_ord":0,"type":"fw","dst_ip":"10.0.0.1","dst_port":443,"dst_mapped_ip":"54.186.142.142","dst_mapped_port":443,"src_ip":"192.168.0.10","src_port":12345,"src_mapped_ip":"200.137.65.102","src_mapped_port":98765,"timestamp":"2025-09-28T14:30:00Z"},"dhcp":{"audita_id":"04cf3e65-84a7-4408-9d97-c67bb80603f5","audita_ord":0,"type":"dhcp","ip":"192.168.0.10","mac":"AA:BB:CC:DD:EE:FF","lease_time":3600,"timestamp":"2025-09-28T14:25:00Z"},"radius":{"audita_id":"f6d0bc60-8f3a-4bee-8cca-028f33948f8e","audita_ord":0,"type":"radius","mac":"AA:BB:CC:DD:EE:FF","username":"luiz.f.machado","timestamp":"2025-09-28T14:20:00Z"}}
+
+
+curl -X GET http://localhost:8080/api/storage/hash/37d6026b-253e-4c4b-86b2-4d9951705066
+
+{"id":"37d6026b-253e-4c4b-86b2-4d9951705066","hash":"59d1fed3a97534e6202215f1e50f506c4f609ec6993466a68dce1d316bb7a4e8"}
+
+curl -X GET http://localhost:8080/api/storage/signer/37d6026b-253e-4c4b-86b2-4d9951705066
+
+{"id":"37d6026b-253e-4c4b-86b2-4d9951705066","hash":"59d1fed3a97534e6202215f1e50f506c4f609ec6993466a68dce1d316bb7a4e8"}
 
 ```
 
