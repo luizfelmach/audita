@@ -3,6 +3,7 @@ use crate::{
     domain::{DynHasher, DynSignerRepository, DynStorageRepository, DynUuidGenerator, Pipeline},
     factories::{make_hasher, make_pipeline, make_signer_repository, make_storage_repository, make_uuid_generator},
     infra::prometheus::Prometheus,
+    state::AppState,
 };
 use anyhow::Result;
 use std::sync::Arc;
@@ -20,11 +21,12 @@ pub struct Context {
 
 impl Context {
     pub fn init() -> Result<Arc<Self>> {
+        let state = AppState::init().unwrap();
         let config = AppConfig::init().unwrap();
         let pipeline = make_pipeline(config.queue_size);
         let hasher = make_hasher();
         let uuid = make_uuid_generator();
-        let signer = make_signer_repository(&config)?;
+        let signer = make_signer_repository(&config, &state)?;
         let storage = make_storage_repository(&config, hasher.clone())?;
         let prom = Prometheus::new();
 
