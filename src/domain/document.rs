@@ -46,7 +46,9 @@ pub struct RadiusDocument {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct StorableDocument {
+    #[serde(rename = "audita_id")]
     pub id: String,
+    #[serde(rename = "audita_ord")]
     pub ord: usize,
 
     #[serde(flatten)]

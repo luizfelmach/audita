@@ -119,6 +119,52 @@ A blockchain atua como uma camada adicional de verificação:
 - ⛓️ Pipeline compatível com Ethereum Besu
 - 🧩 Arquitetura modular para fácil extensão
 
+## Quick Start
+
+```
+
+docker network create audita
+
+
+docker run -d \
+  --name elasticsearch \
+  --network audita \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+
+docker run -d \
+  --name besu \
+  --network audita \
+  hyperledger/besu:25.2.2 \
+  --network=dev \
+  --rpc-http-cors-origins="all" \
+  --rpc-http-enabled \
+  --metrics-enabled \
+  --metrics-host=0.0.0.0 \
+  --host-allowlist="*" \
+  --rpc-http-api=ETH,NET,WEB3,DEBUG,TXPOOL \
+  --rpc-ws-enabled \
+  --rpc-ws-api=ETH,NET,WEB3 \
+  --miner-enabled \
+  --miner-coinbase="0xfe3b557e8fb62b89f4916b721be55ceb828dbd73" \
+  --logging=INFO \
+  --rpc-http-max-active-connections=100000 \
+  --min-gas-price=0 \
+  --tx-pool-max-future-by-sender=1024
+
+docker run -d \
+  --name audita \
+  --network audita \
+  -e AUDITA_BATCH_SIZE=1 \
+  -e AUDITA_ETHEREUM_URL="http://besu:8545" \
+  -e AUDITA_ETHEREUM_PRIVATE_KEY="0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63" \
+  -e AUDITA_ELASTIC_URL="http://elasticsearch:9200" \
+  -p 8080:8080 \
+  ghcr.io/luizfelmach/audita:dev
+
+```
+
 ## 📦 Instalação
 
 ### Opção 1: Docker (Recomendado)
