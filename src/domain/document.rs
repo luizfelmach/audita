@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -15,15 +16,45 @@ pub enum Document {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FirewallDocument {
-    pub ip: String,
+    pub dst_ip: String,
+    pub dst_port: usize,
+    pub dst_mapped_ip: String,
+    pub dst_mapped_port: usize,
+
+    pub src_ip: String,
+    pub src_port: usize,
+    pub src_mapped_ip: String,
+    pub src_mapped_port: usize,
+
+    pub timestamp: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DhcpDocument {
+    pub ip: String,
     pub mac: String,
+    pub lease_time: usize,
+    pub timestamp: DateTime<Utc>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RadiusDocument {
-    pub user: String,
+    pub mac: String,
+    pub username: String,
+    pub timestamp: DateTime<Utc>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct StorableDocument {
+    pub id: String,
+    pub ord: usize,
+
+    #[serde(flatten)]
+    pub document: Document,
+}
+
+impl StorableDocument {
+    pub fn new(id: impl Into<String>, ord: usize, document: Document) -> Self {
+        Self { id: id.into(), ord, document }
+    }
 }

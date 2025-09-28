@@ -1,3 +1,4 @@
+pub mod auditing;
 pub mod document;
 pub mod metrics;
 pub mod signer;

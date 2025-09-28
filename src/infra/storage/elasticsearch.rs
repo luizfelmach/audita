@@ -1,4 +1,4 @@
-use crate::domain::{Batch, Condition, Document, DocumentQuery, Hasher, Operator, Query, StorageRepository};
+use crate::domain::{Batch, Condition, Document, Hasher, Operator, Query, StorableDocument, StorageRepository};
 use anyhow::{bail, Ok, Result};
 use async_trait::async_trait;
 use chrono::Local;
@@ -8,24 +8,9 @@ use elasticsearch::{
     http::transport::{SingleNodeConnectionPool, TransportBuilder},
     BulkOperation, BulkParts, Elasticsearch, SearchParts,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use std::sync::Arc;
-
-#[derive(Serialize, Deserialize)]
-pub struct ElasticsearchDocument {
-    pub audita_id: String,
-    pub audita_ord: usize,
-
-    #[serde(flatten)]
-    pub document: Document,
-}
-
-impl ElasticsearchDocument {
-    pub fn new(audita_id: impl Into<String>, audita_ord: usize, document: Document) -> Self {
-        Self { audita_id: audita_id.into(), audita_ord, document }
-    }
-}
 
 #[derive(Debug, Deserialize)]
 struct EsHit<T> {
@@ -137,7 +122,7 @@ impl StorageRepository for ElasticsearchStorageRepository {
         let index = Local::now().format(&self.indices_pattern).to_string();
 
         for (i, doc) in batch.documents.iter().enumerate() {
-            let elastic_doc = ElasticsearchDocument::new(batch.id.clone(), i, doc.clone());
+            let elastic_doc = StorableDocument::new(batch.id.clone(), i, doc.clone());
             let json_doc: Map<String, Value> = serde_json::to_value(elastic_doc)?.as_object().cloned().unwrap_or_default();
             ops.push(BulkOperation::create(json_doc).index(&index).into());
         }
@@ -154,13 +139,10 @@ impl StorageRepository for ElasticsearchStorageRepository {
     }
 
     async fn retrieve(&self, id: &String) -> Result<Option<Batch>> {
-        // cria uma query que filtra apenas pelo id
-        let query = Query {
-            and: Some(vec![Condition { field: "audita_id.keyword".to_string(), op: Operator::EqString(id.to_string()) }]),
-            ..Default::default()
-        };
+        let query =
+            Query { and: Some(vec![Condition { field: "id".to_string(), op: Operator::EqString(id.to_string()) }]), ..Default::default() };
 
-        let documents: Vec<Document> = self.search(&query).await?.into_iter().map(|dq| dq.source).collect();
+        let documents: Vec<Document> = self.search(&query).await?.into_iter().map(|dq| dq.document).collect();
 
         if documents.is_empty() {
             return Ok(None);
@@ -171,7 +153,7 @@ impl StorageRepository for ElasticsearchStorageRepository {
         Ok(Some(Batch { id: id.to_string(), documents, digest }))
     }
 
-    async fn search(&self, query: &Query) -> Result<Vec<DocumentQuery>> {
+    async fn search(&self, query: &Query) -> Result<Vec<StorableDocument>> {
         let query = self.parse_query(query);
 
         let mut results = Vec::new();
@@ -180,7 +162,7 @@ impl StorageRepository for ElasticsearchStorageRepository {
         loop {
             let mut search = json!({
                 "query": query,
-                "sort": [{ "audita_ord": "asc" }],
+                "sort": [{ "ord": "asc" }],
                 "size": 10_000
             });
 
@@ -190,15 +172,15 @@ impl StorageRepository for ElasticsearchStorageRepository {
 
             let response = self.client.search(SearchParts::None).body(search).send().await?;
 
-            let body: EsResponse<ElasticsearchDocument> = response.json().await?;
+            let body: EsResponse<StorableDocument> = response.json().await?;
 
             if body.hits.hits.is_empty() {
                 break;
             }
 
             for hit in body.hits.hits.iter() {
-                let es_doc = &hit._source;
-                results.push(DocumentQuery { id: es_doc.audita_id.clone(), source: es_doc.document.clone() });
+                let es_doc = hit._source.clone();
+                results.push(es_doc);
             }
 
             after = body.hits.hits.last().and_then(|h| h.sort.clone());
