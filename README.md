@@ -137,6 +137,7 @@ docker run -d \
 docker run -d \
   --name besu \
   --network audita \
+  -e JAVA_OPTS="-XX:-FlightRecorder" \
   -p 8545:8545 \
   hyperledger/besu:25.2.2 \
   --network=dev \
