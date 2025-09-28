@@ -482,49 +482,69 @@ chmod +x audita
 
 ## ⛓️ Deploy do Contrato
 
-Antes de usar o Audita, você precisa fazer o deploy do contrato inteligente na rede Ethereum:
+O audita faz automaticamente o deploy do contrato para a blockchain e salva em um arquivo de estado configurado por `AUDITA_STATE` que pode ser alterado o local do arquivo de estado. Por padrão irá ser salvo no path atual. Em container Docker, o arquivo é salvo em /var/lib/audita/state.json. Útil para fazer volume e não perder o deploy do contrato.
 
-### Pré-requisitos
+O seguinte código é o contrato que o Audita fará deploy:
 
-- Node.js e npm instalados
-- Hardhat configurado
-- Acesso a um nó Ethereum (local ou testnet)
-- Conta com ETH para gas
+```solidity
 
-### Deploy usando Hardhat
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.27;
 
-```bash
-# Clone o repositório de contratos
-git clone https://github.com/luizfelmach/audita.git
-cd hardhat
+contract Auditability {
+    address public owner;
 
-# Configure o endereço do nó e sua conta (private key)
-vim hardhad.config.ts
+    struct IndexData {
+        bytes32 hash;
+        bool exists;
+    }
 
-npm install
+    mapping(string => IndexData) private indices;
+    event IndexStored(string indexed index, bytes32 hash);
 
-# Deploy para rede local
-npx hardhat ignition deploy ignition/modules/Auditability.ts --network besu
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function store(string memory index, bytes32 hash) public {
+        require(!indices[index].exists, "Index already added.");
+
+        indices[index] = IndexData({hash: hash, exists: true});
+
+        emit IndexStored(index, hash);
+    }
+
+    function proof(
+        string memory index,
+        bytes32 hash
+    ) public view returns (bool) {
+        require(indices[index].exists, "Index not found.");
+        return indices[index].hash == hash;
+    }
+
+    function exists(string memory index) public view returns (bool) {
+        return indices[index].exists;
+    }
+
+    function hash(string memory index) public view returns (bytes32) {
+        return indices[index].hash;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner.");
+        _;
+    }
+}
+
 ```
-
-### Verificação do Deploy
-
-```bash
-# Verifique se o contrato foi deployado corretamente
-npx hardhat verify --network besu ENDERECO_DO_CONTRATO
-```
-
-Após o deploy, anote o endereço do contrato para usar na configuração do Audita.
 
 ## ⚙️ Configuração
 
 O Audita pode ser configurado através de arquivos de configuração ou variáveis de ambiente. As fontes de configuração são carregadas na seguinte ordem de precedência:
 
 1. `/etc/audita/config.toml` (sistema)
-2. `~/.config/audita/config.toml` (específico do usuário)
-3. `config.toml` (diretório atual)
-4. `config/dev.toml` (configuração de desenvolvimento)
-5. Variáveis de ambiente (maior prioridade)
+2. `AUDITA_CONFIG` (váriavel de ambiente para alterar o arquivo padrão)
+3. Variáveis de ambiente (maior prioridade)
 
 ### Formato do Arquivo de Configuração
 
@@ -539,7 +559,6 @@ batch_size = 5
 
 [ethereum]
 url = "http://localhost:8545"
-contract = "0x42699A7612A82f1d9C36148af9C77354759b210b"
 private_key = "0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"
 max_tx_pending = 50
 
@@ -552,103 +571,17 @@ indices_pattern = "%Y.%m.%d"
 
 ### Variáveis de Ambiente
 
-Todas as opções de configuração podem ser sobrescritas usando variáveis de ambiente com o prefixo `AUDITA_`. Para seções de configuração aninhadas, use sublinhados duplos (`__`).
+Todas as opções de configuração podem ser sobrescritas usando variáveis de ambiente com o prefixo `AUDITA__`. Para seções de configuração aninhadas, use sublinhados duplos (`__`).
 
 Exemplos:
 
 ```bash
-export AUDITA_PORT=8080
-export AUDITA_HOST="127.0.0.1"
-export AUDITA_ETHEREUM__URL="http://localhost:8545"
-export AUDITA_ETHEREUM__CONTRACT="0x42699A7612A82f1d9C36148af9C77354759b210b"
-export AUDITA_ELASTIC__URL="http://localhost:9200"
-export AUDITA_ELASTIC__USERNAME="elastic"
+export AUDITA__PORT=8080
+export AUDITA__HOST="127.0.0.1"
+export AUDITA__ETHEREUM__URL="http://localhost:8545"
+export AUDITA__ELASTIC__URL="http://localhost:9200"
+export AUDITA__ELASTIC__USERNAME="elastic"
 ```
-
-### Opções de Configuração
-
-| Opção                     | Descrição                          | Padrão     |
-| ------------------------- | ---------------------------------- | ---------- |
-| `host`                    | Endereço de bind do servidor       | `0.0.0.0`  |
-| `port`                    | Porta do servidor                  | `8080`     |
-| `queue_size`              | Tamanho da fila interna            | `8192`     |
-| `batch_size`              | Tamanho do processamento em lote   | `5`        |
-| `ethereum.url`            | URL do nó Ethereum                 | -          |
-| `ethereum.contract`       | Endereço do contrato inteligente   | -          |
-| `ethereum.private_key`    | Chave privada para transações      | -          |
-| `ethereum.max_tx_pending` | Máximo de transações pendentes     | `50`       |
-| `elastic.url`             | URL do ElasticSearch               | -          |
-| `elastic.username`        | Nome de usuário do ElasticSearch   | -          |
-| `elastic.password`        | Senha do ElasticSearch             | -          |
-| `elastic.indices_pattern` | Padrão de nomenclatura dos índices | `%Y.%m.%d` |
-
-## 🎯 Uso Básico
-
-### Enviando Logs para a Aplicação
-
-O Audita recebe logs via API REST:
-
-#### Log do radius
-
-```bash
-curl -X POST http://localhost:8080/api \
-  -H "Content-Type: application/json" \
-  -d '
-  {
-    "@timestamp": "2025-07-14T14:04:26.427588699Z",
-    "mac": "58-6c-25-a0-ba-6d",
-    "type": "radius",
-    "username": "usuario-autenticado"
-  }
-  '
-```
-
-#### Log do DHCP
-
-```bash
-curl -X POST http://localhost:8080/api \
-  -H "Content-Type: application/json" \
-  -d '
-  {
-    "@timestamp": "2025-07-14T14:04:26.634814527Z",
-    "ip": "172.21.29.221",
-    "lease_time": "4000",
-    "mac": "58:6c:25:a0:ba:6d",
-    "type": "dhcp"
-  }
-  '
-```
-
-#### Log do firewall
-
-```bash
-curl -X POST http://localhost:8080/api \
-  -H "Content-Type: application/json" \
-  -d '
-  {
-    "@timestamp": "2025-07-14T14:04:33.000Z",
-    "dst_ip": "172.21.29.221",
-    "dst_mapped_ip": "200.137.65.102",
-    "dst_mapped_port": "57738",
-    "dst_port": "57738",
-    "src_ip": "54.186.142.142",
-    "src_mapped_ip": "54.186.142.142",
-    "src_mapped_port": "443",
-    "src_port": "443",
-    "type": "fw"
-  }
-  '
-```
-
-### Identificando Quem Estava Logado
-
-Para identificar quem estava usando um IP específico em determinado momento, acesse o site http://localhost:8080/auto-detect.
-
-<p align="center"> <img src="assets/searching.png" alt="Arquitetura de integração de logs" width="700"/> </p>
-
-E após realizar a busca, terá o resultado das inserções.
-
-<p align="center"> <img src="assets/result.png" alt="Arquitetura de integração de logs" width="700"/> </p>
 
 ## 🔌 Integração com Coletores de Logs
 
