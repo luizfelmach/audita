@@ -64,6 +64,7 @@ Os logs de firewall são essenciais para rastrear atividades de rede:
 ```
 
 O Audita captura e processa esses logs para:
+
 - Rastrear destinos acessados
 - Correlacionar com dados de autenticação
 
@@ -95,6 +96,7 @@ O servidor RADIUS fornece a camada de identificação de usuários:
 ```
 
 Essa correlação permite que o Audita saiba exatamente:
+
 - Quem está por trás de cada IP interno
 - Quando a sessão começou e terminou
 - Qual dispositivo está sendo usado
@@ -109,6 +111,7 @@ A blockchain atua como uma camada adicional de verificação:
 - **Trilha de auditoria**: Cria uma cadeia cronológica verificável
 
 ## 🚀 Funcionalidades
+
 - ⚙️ Backend de alta performance em Rust
 - 📦 Containerizado via Docker
 - 📈 Integração com Prometheus & Grafana
@@ -117,13 +120,17 @@ A blockchain atua como uma camada adicional de verificação:
 - 🧩 Arquitetura modular para fácil extensão
 
 ## 📦 Instalação
+
 ### Opção 1: Docker (Recomendado)
+
 ```bash
 docker run ghcr.io/luizfelmach/audita:latest
 ```
 
 ### Opção 2: Compilar do Código Fonte
+
 Pré-requisitos: Rust e Cargo instalados.
+
 ```bash
 git clone https://github.com/luizfelmach/audita.git
 cd audita
@@ -132,8 +139,10 @@ cargo build --release
 ```
 
 ### Opção 3: Executar via Binário Pré-compilado
+
 1. Baixe o binário mais recente para sua plataforma na [página de Releases](https://github.com/luizfelmach/audita/releases)
 2. Torne-o executável:
+
 ```bash
 chmod +x audita
 ./audita
@@ -144,12 +153,14 @@ chmod +x audita
 Antes de usar o Audita, você precisa fazer o deploy do contrato inteligente na rede Ethereum:
 
 ### Pré-requisitos
+
 - Node.js e npm instalados
 - Hardhat configurado
 - Acesso a um nó Ethereum (local ou testnet)
 - Conta com ETH para gas
 
 ### Deploy usando Hardhat
+
 ```bash
 # Clone o repositório de contratos
 git clone https://github.com/luizfelmach/audita.git
@@ -165,6 +176,7 @@ npx hardhat ignition deploy ignition/modules/Auditability.ts --network besu
 ```
 
 ### Verificação do Deploy
+
 ```bash
 # Verifique se o contrato foi deployado corretamente
 npx hardhat verify --network besu ENDERECO_DO_CONTRATO
@@ -173,7 +185,9 @@ npx hardhat verify --network besu ENDERECO_DO_CONTRATO
 Após o deploy, anote o endereço do contrato para usar na configuração do Audita.
 
 ## ⚙️ Configuração
+
 O Audita pode ser configurado através de arquivos de configuração ou variáveis de ambiente. As fontes de configuração são carregadas na seguinte ordem de precedência:
+
 1. `/etc/audita/config.toml` (sistema)
 2. `~/.config/audita/config.toml` (específico do usuário)
 3. `config.toml` (diretório atual)
@@ -181,7 +195,9 @@ O Audita pode ser configurado através de arquivos de configuração ou variáve
 5. Variáveis de ambiente (maior prioridade)
 
 ### Formato do Arquivo de Configuração
+
 Crie um arquivo `config.toml` com a seguinte estrutura:
+
 ```toml
 host = "0.0.0.0"
 name = "worker"
@@ -203,9 +219,11 @@ indices_pattern = "%Y.%m.%d"
 ```
 
 ### Variáveis de Ambiente
+
 Todas as opções de configuração podem ser sobrescritas usando variáveis de ambiente com o prefixo `AUDITA_`. Para seções de configuração aninhadas, use sublinhados duplos (`__`).
 
 Exemplos:
+
 ```bash
 export AUDITA_PORT=8080
 export AUDITA_HOST="127.0.0.1"
@@ -216,19 +234,20 @@ export AUDITA_ELASTIC__USERNAME="elastic"
 ```
 
 ### Opções de Configuração
-| Opção | Descrição | Padrão |
-|-------|-----------|---------|
-| `host` | Endereço de bind do servidor | `0.0.0.0` |
-| `port` | Porta do servidor | `8080` |
-| `queue_size` | Tamanho da fila interna | `8192` |
-| `batch_size` | Tamanho do processamento em lote | `5` |
-| `ethereum.url` | URL do nó Ethereum | - |
-| `ethereum.contract` | Endereço do contrato inteligente | - |
-| `ethereum.private_key` | Chave privada para transações | - |
-| `ethereum.max_tx_pending` | Máximo de transações pendentes | `50` |
-| `elastic.url` | URL do ElasticSearch | - |
-| `elastic.username` | Nome de usuário do ElasticSearch | - |
-| `elastic.password` | Senha do ElasticSearch | - |
+
+| Opção                     | Descrição                          | Padrão     |
+| ------------------------- | ---------------------------------- | ---------- |
+| `host`                    | Endereço de bind do servidor       | `0.0.0.0`  |
+| `port`                    | Porta do servidor                  | `8080`     |
+| `queue_size`              | Tamanho da fila interna            | `8192`     |
+| `batch_size`              | Tamanho do processamento em lote   | `5`        |
+| `ethereum.url`            | URL do nó Ethereum                 | -          |
+| `ethereum.contract`       | Endereço do contrato inteligente   | -          |
+| `ethereum.private_key`    | Chave privada para transações      | -          |
+| `ethereum.max_tx_pending` | Máximo de transações pendentes     | `50`       |
+| `elastic.url`             | URL do ElasticSearch               | -          |
+| `elastic.username`        | Nome de usuário do ElasticSearch   | -          |
+| `elastic.password`        | Senha do ElasticSearch             | -          |
 | `elastic.indices_pattern` | Padrão de nomenclatura dos índices | `%Y.%m.%d` |
 
 ## 🎯 Uso Básico
@@ -238,6 +257,7 @@ export AUDITA_ELASTIC__USERNAME="elastic"
 O Audita recebe logs via API REST:
 
 #### Log do radius
+
 ```bash
 curl -X POST http://localhost:8080/api \
   -H "Content-Type: application/json" \
@@ -252,6 +272,7 @@ curl -X POST http://localhost:8080/api \
 ```
 
 #### Log do DHCP
+
 ```bash
 curl -X POST http://localhost:8080/api \
   -H "Content-Type: application/json" \
@@ -267,6 +288,7 @@ curl -X POST http://localhost:8080/api \
 ```
 
 #### Log do firewall
+
 ```bash
 curl -X POST http://localhost:8080/api \
   -H "Content-Type: application/json" \
@@ -286,28 +308,23 @@ curl -X POST http://localhost:8080/api \
   '
 ```
 
-
 ### Identificando Quem Estava Logado
 
 Para identificar quem estava usando um IP específico em determinado momento, acesse o site http://localhost:8080/auto-detect.
 
 <p align="center"> <img src="assets/searching.png" alt="Arquitetura de integração de logs" width="700"/> </p>
 
-
 E após realizar a busca, terá o resultado das inserções.
 
 <p align="center"> <img src="assets/result.png" alt="Arquitetura de integração de logs" width="700"/> </p>
 
-
 ## 🔌 Integração com Coletores de Logs
-
 
 O auditalogs é bem extensível, ou seja, você pode usar o coletor de logs de sua preferência. Para isso, basta utilizar configurar que a saída do logs vai ser a chamada HTTP em /api para o correto funcionamento.
 
 Aqui é um exemplo de configuração com arquitetura utilizando Logstash para coleta de logs:
 
 <p align="center"> <img src="assets/arch.png" alt="Arquitetura de integração de logs" width="700"/> </p>
-
 
 Para coleta de LOGS, basta configurar a saída do Logstash para a aplicação, como no exemplo:
 
@@ -319,7 +336,7 @@ input {
     start_position => "beginning"
     sincedb_path => "/dev/null"
   }
-  
+
   # Exemplo: lendo do stdin (para testes)
   # stdin { }
 }
@@ -358,7 +375,6 @@ output {
   }
 }
 ```
-
 
 ### Contribuindo
 
