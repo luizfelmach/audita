@@ -119,7 +119,7 @@ A blockchain atua como uma camada adicional de verificação:
 - ⛓️ Pipeline compatível com Ethereum Besu
 - 🧩 Arquitetura modular para fácil extensão
 
-## Quick Start
+## ✨ Quick Start
 
 Este guia rápido demonstra como configurar e usar o sistema Audita para auditoria de logs de rede usando blockchain e Elasticsearch.
 
