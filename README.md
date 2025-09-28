@@ -158,10 +158,12 @@ docker run -d \
 docker run -d \
   --name audita \
   --network audita \
-  -e AUDITA_BATCH_SIZE=1 \
-  -e AUDITA_ETHEREUM_URL="http://besu:8545" \
-  -e AUDITA_ETHEREUM_PRIVATE_KEY="0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63" \
-  -e AUDITA_ELASTIC_URL="http://elasticsearch:9200" \
+  -e AUDITA__BATCH_SIZE=1 \
+  -e AUDITA__ETHEREUM__URL="http://besu:8545" \
+  -e AUDITA__ETHEREUM__PRIVATE_KEY="0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63" \
+  -e AUDITA__ELASTIC__URL="http://elasticsearch:9200" \
+  -e AUDITA__ELASTIC__USERNAME="elastic" \
+  -e AUDITA__ELASTIC__PASSWORD="changeme" \
   -p 8080:8080 \
   ghcr.io/luizfelmach/audita:dev
 
