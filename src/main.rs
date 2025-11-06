@@ -4,6 +4,7 @@ mod domain;
 mod factories;
 mod infra;
 mod presentation;
+mod state;
 mod tasks;
 
 use crate::{context::Context, presentation::server};
@@ -18,15 +19,15 @@ async fn main() {
     debug!(?ctx.config);
     info!("Spawning background workers...");
 
-    for _ in 0..100 {
+    for _ in 0..1 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::worker::run(ctx));
     }
-    for _ in 0..100 {
+    for _ in 0..1 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::signer::run(ctx));
     }
-    for _ in 0..100 {
+    for _ in 0..1 {
         let ctx = ctx.clone();
         tokio::spawn(tasks::storage::run(ctx));
     }

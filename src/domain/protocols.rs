@@ -1,4 +1,4 @@
-use crate::domain::{Batch, Document, Query, QueryResult};
+use crate::domain::{Batch, Document, Query, StorableDocument};
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ pub trait SignerRepository: Send + Sync {
 pub trait StorageRepository: Send + Sync {
     async fn store(&self, batch: &Batch) -> Result<()>;
     async fn retrieve(&self, id: &String) -> Result<Option<Batch>>;
-    async fn search(&self, query: &Query) -> Result<QueryResult>;
+    async fn search(&self, query: &Query) -> Result<Vec<StorableDocument>>;
 }
 
 #[async_trait]

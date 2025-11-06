@@ -42,5 +42,3 @@ pub struct DocumentQuery {
     pub id: String,
     pub source: Document,
 }
-
-pub type QueryResult = Vec<DocumentQuery>;

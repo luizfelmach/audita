@@ -1,6 +1,5 @@
 use crate::{
     context::Context,
-    domain::{Query, QueryResult},
     presentation::error::{AppError, HttpResult},
 };
 use anyhow::Context as AnyhowContext;
@@ -9,7 +8,7 @@ use axum::{
     Extension, Json,
 };
 use moka::future::Cache;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 
 pub type CacheHashStorageResponse = Arc<Cache<String, GetHashStorageResponse>>;
@@ -37,21 +36,4 @@ pub async fn get_hash_storage(
         }
         None => Err(AppError::NotFound("No records found for the given batch_id".into())),
     }
-}
-
-#[derive(Deserialize)]
-pub struct SearchDocumentsRequest {
-    query: Query,
-}
-
-#[derive(Serialize)]
-pub struct SearchDocumentsResponse {
-    docs: QueryResult,
-}
-
-pub async fn search_documents(
-    State(ctx): State<Context>, Json(payload): Json<SearchDocumentsRequest>,
-) -> HttpResult<Json<SearchDocumentsResponse>> {
-    let docs = ctx.storage.search(&payload.query).await.context("An error ocurrued when processing query")?;
-    Ok(Json(SearchDocumentsResponse { docs }))
 }

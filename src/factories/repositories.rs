@@ -2,18 +2,23 @@ use crate::{
     config::AppConfig,
     domain::{DynHasher, DynSignerRepository, DynStorageRepository},
     infra::{signer::EthereumSignerRepository, storage::ElasticsearchStorageRepository},
+    state::AppState,
 };
 use anyhow::Result;
 use std::sync::Arc;
 
-pub fn make_signer_repository(config: &AppConfig) -> Result<DynSignerRepository> {
+pub fn make_signer_repository(config: &AppConfig, state: &AppState) -> Result<DynSignerRepository> {
     let ethereum = &config.ethereum;
-    let signer = EthereumSignerRepository::new(
-        ethereum.url.clone(),
-        ethereum.contract.clone(),
-        ethereum.private_key.clone(),
-        ethereum.max_tx_pending,
-    )?;
+
+    let contract = match &state.contract {
+        Some(address) => address.clone(),
+        None => EthereumSignerRepository::deploy_contract(ethereum.url.clone(), ethereum.private_key.clone())?,
+    };
+
+    let _ = AppState::save_contract(contract.clone())?;
+
+    let signer = EthereumSignerRepository::new(ethereum.url.clone(), contract, ethereum.private_key.clone(), ethereum.max_tx_pending)?;
+
     Ok(Arc::new(signer))
 }
 

@@ -21,6 +21,10 @@ COPY config/default.toml /etc/audita/config.toml
 
 EXPOSE 8080
 
+RUN mkdir -p /var/lib/audita \
+    && echo "{}" > /var/lib/audita/state.json
+ENV AUDITA_STATE=/var/lib/audita/state.json
+
 RUN cat <<EOF > /entrypoint.sh
 #!/bin/sh
 exec audita | tee -a /var/log/audita.log
